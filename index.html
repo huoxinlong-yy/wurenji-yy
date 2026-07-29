@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>无人机驾驶员刷题系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  min-height: 100vh; color: #e2e8f0;
+}
+.header {
+  background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 16px 24px; text-align: center;
+}
+.header h1 {
+  font-size: 24px; background: linear-gradient(90deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header p { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+.container { max-width: 720px; margin: 0 auto; padding: 20px 16px; }
+/* Home screen */
+.home { text-align: center; padding-top: 40px; }
+.home h2 { font-size: 22px; margin-bottom: 12px; color: #f1f5f9; }
+.home p { color: #94a3b8; margin-bottom: 32px; font-size: 15px; }
+.mode-cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.mode-card {
+  background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 16px; padding: 32px 24px; width: 260px; cursor: pointer;
+  transition: all 0.3s; text-align: center;
+}
+.mode-card:hover {
+  border-color: #3b82f6; transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2);
+}
+.mode-card .icon { font-size: 40px; margin-bottom: 12px; }
+.mode-card h3 { font-size: 18px; margin-bottom: 8px; color: #e2e8f0; }
+.mode-card p { font-size: 13px; color: #94a3b8; }
+/* Quantity selector */
+.qty-selector {
+  margin-top: 32px; padding: 24px;
+  background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 16px; text-align: center;
+}
+.qty-selector h3 { font-size: 16px; color: #f1f5f9; margin-bottom: 16px; }
+.qty-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.qty-btn {
+  background: rgba(51, 65, 85, 0.5); border: 1px solid rgba(71, 85, 105, 0.6);
+  border-radius: 10px; padding: 12px 24px; cursor: pointer;
+  transition: all 0.2s; color: #e2e8f0; font-size: 14px; font-weight: 600;
+}
+.qty-btn:hover { border-color: #3b82f6; background: rgba(59, 130, 246, 0.15); }
+.qty-btn.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+.qty-btn.selected { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+/* Quiz */
+.quiz-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; font-size: 14px; color: #94a3b8;
+}
+.progress-bar {
+  width: 100%; height: 6px; background: rgba(51, 65, 85, 0.8);
+  border-radius: 3px; margin-bottom: 20px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 3px; transition: width 0.3s;
+}
+.question-card {
+  background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(51, 65, 85, 0.8);
+  border-radius: 16px; padding: 24px; margin-bottom: 16px;
+}
+.question-num {
+  display: inline-block; background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  color: #fff; font-size: 12px; font-weight: 600;
+  padding: 2px 10px; border-radius: 10px; margin-bottom: 12px;
+}
+.question-text { font-size: 16px; line-height: 1.7; color: #f1f5f9; }
+.options { margin-top: 16px; }
+.option {
+  display: block; width: 100%;
+  background: rgba(51, 65, 85, 0.5); border: 1px solid rgba(71, 85, 105, 0.6);
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+  cursor: pointer; transition: all 0.2s; text-align: left;
+  color: #e2e8f0; font-size: 14px; line-height: 1.5;
+}
+.option:hover { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+.option.selected {
+  border-color: #3b82f6; background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+.option.correct {
+  border-color: #22c55e !important; background: rgba(34, 197, 94, 0.15) !important;
+  color: #86efac !important;
+}
+.option.wrong {
+  border-color: #ef4444 !important; background: rgba(239, 68, 68, 0.15) !important;
+  color: #fca5a5 !important;
+}
+.option .label {
+  display: inline-block; width: 26px; height: 26px;
+  line-height: 26px; text-align: center; border-radius: 50%;
+  background: rgba(71, 85, 105, 0.6); margin-right: 10px;
+  font-weight: 600; font-size: 13px; flex-shrink: 0;
+}
+.option.selected .label { background: #3b82f6; color: #fff; }
+.option.correct .label { background: #22c55e; color: #fff; }
+.option.wrong .label { background: #ef4444; color: #fff; }
+.explanation {
+  margin-top: 16px; padding: 12px 16px;
+  background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 10px; font-size: 14px; color: #86efac;
+}
+.btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
+.btn {
+  padding: 12px 28px; border-radius: 10px; border: none;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; color: #fff;
+}
+.btn-primary { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4); }
+.btn-secondary { background: rgba(51, 65, 85, 0.8); border: 1px solid rgba(71, 85, 105, 0.6); }
+.btn-secondary:hover { background: rgba(71, 85, 105, 0.8); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+/* Result */
+.result { text-align: center; padding-top: 30px; }
+.result .score-ring {
+  width: 180px; height: 180px; margin: 0 auto 24px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+}
+.result .score-num { font-size: 48px; font-weight: 700; }
+.result .score-label { font-size: 14px; color: #94a3b8; }
+.result h2 { font-size: 22px; margin-bottom: 8px; }
+.result p { color: #94a3b8; font-size: 15px; margin-bottom: 24px; }
+.stat-row { display: flex; gap: 16px; justify-content: center; margin-bottom: 32px; }
+.stat-item {
+  background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(51, 65, 85, 0.8);
+  border-radius: 12px; padding: 16px 24px; text-align: center; min-width: 100px;
+}
+.stat-item .val { font-size: 28px; font-weight: 700; }
+.stat-item .lbl { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+.stat-item.correct-stat .val { color: #22c55e; }
+.stat-item.wrong-stat .val { color: #ef4444; }
+/* Wrong list */
+.wrong-list { text-align: left; margin-top: 24px; }
+.wrong-item {
+  background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px; padding: 16px; margin-bottom: 12px;
+}
+.wrong-item .q-text { font-size: 14px; color: #f1f5f9; margin-bottom: 8px; }
+.wrong-item .answer-row { font-size: 13px; }
+.wrong-item .your-ans { color: #fca5a5; }
+.wrong-item .right-ans { color: #86efac; }
+.hidden { display: none; }
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .header { padding: 12px 16px; }
+  .header h1 { font-size: 18px; }
+  .header p { font-size: 12px; }
+  .container { padding: 12px 10px; }
+  .home { padding-top: 20px; }
+  .home h2 { font-size: 18px; margin-bottom: 8px; }
+  .home p { font-size: 13px; margin-bottom: 24px; }
+  .mode-cards { flex-direction: column; gap: 12px; }
+  .mode-card { width: 100%; padding: 20px 16px; }
+  .mode-card .icon { font-size: 32px; }
+  .mode-card h3 { font-size: 16px; }
+  .mode-card p { font-size: 12px; }
+  .qty-selector { margin-top: 20px; padding: 16px; }
+  .qty-selector h3 { font-size: 14px; }
+  .qty-btns { gap: 8px; }
+  .qty-btn { padding: 10px 16px; font-size: 13px; }
+  .quiz-header { font-size: 13px; }
+  .question-card { padding: 16px; }
+  .question-text { font-size: 15px; line-height: 1.6; }
+  .option { padding: 12px 14px; font-size: 13px; line-height: 1.4; }
+  .option .label { width: 24px; height: 24px; line-height: 24px; font-size: 12px; margin-right: 8px; }
+  .explanation { padding: 10px 14px; font-size: 13px; }
+  .btn-row { gap: 8px; margin-top: 16px; }
+  .btn { padding: 10px 20px; font-size: 14px; }
+  .result .score-ring { width: 140px; height: 140px; }
+  .result .score-num { font-size: 36px; }
+  .result .score-label { font-size: 12px; }
+  .result h2 { font-size: 18px; }
+  .result p { font-size: 13px; }
+  .stat-row { gap: 10px; flex-wrap: wrap; }
+  .stat-item { padding: 12px 16px; min-width: 80px; }
+  .stat-item .val { font-size: 22px; }
+  .wrong-item { padding: 12px; }
+  .wrong-item .q-text { font-size: 13px; }
+  .wrong-item .answer-row { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>无人机驾驶员刷题系统</h1>
+  <p>无人机驾驶员（初级）复习题 - 共150题</p>
+</div>
+
+<div class="container">
+  <!-- Home -->
+  <div id="home" class="home">
+    <h2>选择刷题模式</h2>
+    <p>从150道题库中选择你的刷题方式</p>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="startQuiz('order')">
+        <div class="icon">&#128218;</div>
+        <h3>按序刷题</h3>
+        <p>从第1题到第150题，按顺序逐题练习</p>
+      </div>
+      <div class="mode-card" onclick="selectRandomMode()">
+        <div class="icon">&#127922;</div>
+        <h3>随机刷题</h3>
+        <p>随机抽取题目，分段练习，检验掌握程度</p>
+      </div>
+    </div>
+    <!-- 题量选择面板 -->
+    <div id="qty-panel" class="qty-selector hidden">
+      <h3>选择每次刷题数量</h3>
+      <div class="qty-btns">
+        <div class="qty-btn" onclick="selectQty(10, this)">10 题</div>
+        <div class="qty-btn" onclick="selectQty(20, this)">20 题</div>
+        <div class="qty-btn" onclick="selectQty(30, this)">30 题</div>
+        <div class="qty-btn" onclick="selectQty(150, this)">全部 150 题</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz -->
+  <div id="quiz" class="hidden">
+    <div class="quiz-header">
+      <span id="mode-label"></span>
+      <span id="progress-text"></span>
+    </div>
+    <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+    <div class="question-card">
+      <div id="question-num" class="question-num"></div>
+      <div id="question-text" class="question-text"></div>
+      <div id="options" class="options"></div>
+      <div id="explanation" class="explanation hidden"></div>
+    </div>
+    <div class="btn-row">
+      <button id="btn-prev" class="btn btn-secondary" onclick="prevQuestion()">&#8592; 上一题</button>
+      <button id="btn-next" class="btn btn-primary" onclick="nextQuestion()">下一题 &#8594;</button>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div id="result" class="result hidden">
+    <div class="score-ring" id="score-ring">
+      <div class="score-num" id="score-num">0%</div>
+      <div class="score-label">正确率</div>
+    </div>
+    <h2 id="result-title">练习完成</h2>
+    <p id="result-desc"></p>
+    <div class="stat-row">
+      <div class="stat-item correct-stat">
+        <div class="val" id="correct-count">0</div>
+        <div class="lbl">正确</div>
+      </div>
+      <div class="stat-item wrong-stat">
+        <div class="val" id="wrong-count">0</div>
+        <div class="lbl">错误</div>
+      </div>
+      <div class="stat-item">
+        <div class="val" id="total-count">0</div>
+        <div class="lbl">总题数</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goHome()">返回首页</button>
+      <button class="btn btn-primary" onclick="reviewWrong()">查看错题</button>
+      <button id="btn-redo-wrong" class="btn btn-primary hidden" onclick="redoWrong()">错题重答</button>
+      <button class="btn btn-primary" onclick="restartQuiz()">再做一次</button>
+      <button id="btn-continue" class="btn btn-primary hidden" onclick="continueRandom()">继续随机刷题</button>
+    </div>
+    <div id="wrong-list" class="wrong-list hidden"></div>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [{"id": 1, "question": "下列说法正确的是（  ）。", "answer": "D", "options": [{"label": "A", "text": "职业道德素质差的人，也可能具有较高的职业技能，因此职业技能与职业道德没有什么关系"}, {"label": "B", "text": "相对于职业技能，职业道德居次要地位"}, {"label": "C", "text": "一个人事业要获得成功，关键就是职业技能"}, {"label": "D", "text": "职业道德对职业技能的提高具有促进作用"}]}, {"id": 2, "question": "无人机植保技术主要应用于以下哪个领域（  ）。", "answer": "B", "options": [{"label": "A", "text": "林业"}, {"label": "B", "text": "农业"}, {"label": "C", "text": "建筑"}, {"label": "D", "text": "运输"}]}, {"id": 3, "question": "植保无人机最终产生升力的部件是（  ）。", "answer": "B", "options": [{"label": "A", "text": "电池"}, {"label": "B", "text": "桨叶"}, {"label": "C", "text": "电调"}, {"label": "D", "text": "电机"}]}, {"id": 4, "question": "微型无人机是指（  ）的无人机。", "answer": "A", "options": [{"label": "A", "text": "空机质量小于等于7千克"}, {"label": "B", "text": "空机质量小于7千克"}, {"label": "C", "text": "质量小于等于7千克"}, {"label": "D", "text": "质量小于等于7千克"}]}, {"id": 5, "question": "无人机植保系统能够对农作物的（  ）进行实时监测，帮助农民及时采取相应的措施。", "answer": "C", "options": [{"label": "A", "text": "生长状态"}, {"label": "B", "text": "水分含量"}, {"label": "C", "text": "病虫害情况"}, {"label": "D", "text": "养分浓度"}]}, {"id": 6, "question": "无人机系统的英文缩写是（  ）。", "answer": "B", "options": [{"label": "A", "text": "UVS"}, {"label": "B", "text": "UAS"}, {"label": "C", "text": "UAV"}, {"label": "D", "text": "UAE"}]}, {"id": 7, "question": "无人机的英文缩写是（  ）", "answer": "C", "options": [{"label": "A", "text": "UAS"}, {"label": "B", "text": "UVS"}, {"label": "C", "text": "UAV"}, {"label": "D", "text": "UAE"}]}, {"id": 8, "question": "多旋翼飞行器属于以下哪个概念范畴（  ）", "answer": "C", "options": [{"label": "A", "text": "轻于空气的航空器"}, {"label": "B", "text": "直升机"}, {"label": "C", "text": "旋翼机"}, {"label": "D", "text": "固定翼"}]}, {"id": 9, "question": "无人机相对有人机的优势，以下那条不正确。（  ）", "answer": "C", "options": [{"label": "A", "text": "无需生命支持系统"}, {"label": "B", "text": "训练可多依赖于模拟器"}, {"label": "C", "text": "可靠性指标高"}, {"label": "D", "text": "成本高"}]}, {"id": 10, "question": "以下不属于航空器的是：（  ）", "answer": "C", "options": [{"label": "A", "text": "直升机"}, {"label": "B", "text": "飞艇"}, {"label": "C", "text": "卫星"}, {"label": "D", "text": "固定翼"}]}, {"id": 11, "question": "超近程无人机活动半径在（  ）以内。", "answer": "A", "options": [{"label": "A", "text": "15KM"}, {"label": "B", "text": "15-50KM"}, {"label": "C", "text": "50-200KM"}, {"label": "D", "text": "150-200KM"}]}, {"id": 12, "question": "无人机系统的机长是指（  ）", "answer": "C", "options": [{"label": "A", "text": "操控无人机的人"}, {"label": "B", "text": "协助操控无人机的人"}, {"label": "C", "text": "负责整个无人机系统刚运行和安全的驾驶员"}, {"label": "D", "text": "制造厂商"}]}, {"id": 13, "question": "《中国民用航空法》的颁发目的①为了维护国家的领空主权和民用航空权利②保障民用航空安全和有秩序地进行③保护民用航空活动当事人各方的合法利益④促进民用航空事业的发展（  ）", "answer": "B", "options": [{"label": "A", "text": "12"}, {"label": "B", "text": "1234"}, {"label": "C", "text": "34"}, {"label": "D", "text": "134"}]}, {"id": 14, "question": "对于民用无人机运行的仪表．设备和标识要求中，用于记录．回放和分析飞行过程的飞行数据记录系统，且数据信息至少保存（  ）", "answer": "A", "options": [{"label": "A", "text": "三个月"}, {"label": "B", "text": "一个月"}, {"label": "C", "text": "半年"}, {"label": "D", "text": "一年"}]}, {"id": 15, "question": "《一般运行和飞行规则》的颁布目的是：①为了维护国家领空主权②为了规范民用航空器的运行③保证飞行的正常与安全（  ）", "answer": "C", "options": [{"label": "A", "text": "12"}, {"label": "B", "text": "23"}, {"label": "C", "text": "123"}, {"label": "D", "text": "13"}]}, {"id": 16, "question": "轻型无人机是指空机质量（  ）的无人机。", "answer": "B", "options": [{"label": "A", "text": "小于7kg"}, {"label": "B", "text": "大于7kg，小于等于116kg"}, {"label": "C", "text": "大于116kg，小于5700kg"}, {"label": "D", "text": "大于500kg，小于5600kg"}]}, {"id": 17, "question": "多轴飞行器重心过高于或过低于桨平面会（  ）", "answer": "B", "options": [{"label": "A", "text": "增加稳定性"}, {"label": "B", "text": "降低机动性"}, {"label": "C", "text": "显著影响电力消耗"}, {"label": "D", "text": "无法起飞"}]}, {"id": 18, "question": "大型无人机是指（  ）。", "answer": "C", "options": [{"label": "A", "text": "空机质量大于5700千克的无人机"}, {"label": "B", "text": "质量大于5700千克的无人机"}, {"label": "C", "text": "空机质量大于等于5700千克的无人机"}, {"label": "D", "text": "质量大于等于5700千克的无人机"}]}, {"id": 19, "question": "无人机驾驶员在执行飞行任务时，应当随身携带（  ）", "answer": "C", "options": [{"label": "A", "text": "飞机适航证书"}, {"label": "B", "text": "飞行记录本"}, {"label": "C", "text": "驾驶员执照或合格证"}, {"label": "D", "text": "遥控器"}]}, {"id": 20, "question": "降落时间的含义是指（  ）", "answer": "C", "options": [{"label": "A", "text": "航空器着陆后前轮接地的瞬间"}, {"label": "B", "text": "航空器接地的瞬间"}, {"label": "C", "text": "航空器着陆滑跑终止的瞬间"}, {"label": "D", "text": "航空器着陆后后轮接地的瞬间"}]}, {"id": 21, "question": "起飞时间（陆上）的含义是指（  ）", "answer": "C", "options": [{"label": "A", "text": "航空器进入跑道对正起飞方向的瞬间"}, {"label": "B", "text": "航空器起飞滑跑抬前轮的瞬间"}, {"label": "C", "text": "航空器开始起飞滑跑轮子转动的瞬间"}, {"label": "D", "text": "航空器起飞滑跑抬后轮的瞬间"}]}, {"id": 22, "question": "关于“飞行管理”不正确的是（  ）", "answer": "C", "options": [{"label": "A", "text": "民用航空器未经批准不得飞出中华人民共和国领空"}, {"label": "B", "text": "通常情况下，民用航空器不得飞入禁区和限制区"}, {"label": "C", "text": "在一个划定的管制空域内，可由两个空中交通管制单位负责空中交通管制"}, {"label": "D", "text": "民用航空器驾驶员应取得驾驶执照或合格证"}]}, {"id": 23, "question": "学员单飞前必须达到的要求是：①通过由授权教员实施的理论考试；②接受并记录了单飞所用航空器的适用动作与程序的飞行训练；③经授权教员在该型号或类似航空器上检查，认为该驾驶员熟练掌握了这些动作与程序（  ）", "answer": "B", "options": [{"label": "A", "text": "①③"}, {"label": "B", "text": "②③"}, {"label": "C", "text": "①②③"}, {"label": "D", "text": "①②"}]}, {"id": 24, "question": "无人机飞行手册中规定的过载表明（  ）", "answer": "B", "options": [{"label": "A", "text": "着陆时允许的最大过载"}, {"label": "B", "text": "飞行中允许的最大过载"}, {"label": "C", "text": "起飞时允许的最大过载"}, {"label": "D", "text": "飞行中允许的最小载荷"}]}, {"id": 25, "question": "为保障飞行安全，建议无论是在白天还是夜间，当发动机在运转时就打开：（  ）", "answer": "A", "options": [{"label": "A", "text": "防撞灯"}, {"label": "B", "text": "着陆灯"}, {"label": "C", "text": "航行灯"}, {"label": "D", "text": "转弯灯"}]}, {"id": 26, "question": "空域是航空器运行的环境，也是宝贵的国家资源。国务院．中央军委十分重视我国民用航空交通管制的建设工作，目前正在推进空域管理改革，预计划分三类空域，为（  ）", "answer": "C", "options": [{"label": "A", "text": "管制空域、非管制空域和特殊空域"}, {"label": "B", "text": "管制空域、非管制空域和报告空域"}, {"label": "C", "text": "管制空域、监视空域和报告空域"}, {"label": "D", "text": "管制空域、监视空域和特殊空域"}]}, {"id": 27, "question": "个人民用无人机拥有者在“无人机实名登记系统”中登记的信息包括：（  ）", "answer": "C", "options": [{"label": "A", "text": "驾驶员姓名、有效证件号码、联系方式"}, {"label": "B", "text": "拥有者姓名、有效证件号码、工作单位、联系方式"}, {"label": "C", "text": "拥有者姓名、有效证件号码、使用者目的"}, {"label": "D", "text": "驾驶员姓名、有效证件号码、使用者目的、联系方式"}]}, {"id": 28, "question": "飞行的安全高度是避免航空器与地面障碍物相撞（  ）", "answer": "A", "options": [{"label": "A", "text": "最低飞行安全高度"}, {"label": "B", "text": "航图网格最低飞行高度"}, {"label": "C", "text": "最低飞行高度"}, {"label": "D", "text": "飞行距离"}]}, {"id": 29, "question": "传感器主要是采集目标数据信号的装置，监视目标位置变化使用的传感器是（  ）。", "answer": "D", "options": [{"label": "A", "text": "双目传感器"}, {"label": "B", "text": "超声波传感器"}, {"label": "C", "text": "光流传感器"}, {"label": "D", "text": "GPS 接收机"}]}, {"id": 30, "question": "不属于无人机系统的是（  ）。", "answer": "B", "options": [{"label": "A", "text": "飞行平台"}, {"label": "B", "text": "飞行员"}, {"label": "C", "text": "导航飞控系统"}, {"label": "D", "text": "通信与数据链系统"}]}, {"id": 31, "question": "飞行教员合格证申请人必须年满（  ）", "answer": "B", "options": [{"label": "A", "text": "21周岁"}, {"label": "B", "text": "18周岁"}, {"label": "C", "text": "20周岁"}, {"label": "D", "text": "24周岁"}]}, {"id": 32, "question": "超低空飞行，按照飞行高度区分为（  ）。", "answer": "B", "options": [{"label": "A", "text": "距地面或水面50米以下"}, {"label": "B", "text": "距地面或水面100米以下"}, {"label": "C", "text": "距地面或水面5米至100米"}, {"label": "D", "text": "距地面或水面15米至100米"}]}, {"id": 33, "question": "经验表明无人机每飞行（  ）小时或者更少就需要某种类型的预防性维护，至少每（  ）小时进行较小的维护。", "answer": "B", "options": [{"label": "A", "text": "30，60"}, {"label": "B", "text": "20，50"}, {"label": "C", "text": "25，40"}, {"label": "D", "text": "30，50"}]}, {"id": 34, "question": "无人机驾驶员在操作无人机时，应遵守国际民航组织（ICAO）的（  ） 规定。", "answer": "B", "options": [{"label": "A", "text": "无人机具体操作"}, {"label": "B", "text": "无人机飞行安全"}, {"label": "C", "text": "无人机型号选择"}, {"label": "D", "text": "无人机载荷携带"}]}, {"id": 35, "question": "民用无人机的空机重量包含：（  ）", "answer": "C", "options": [{"label": "A", "text": "不包含载荷、电池和燃料的无人机重量"}, {"label": "B", "text": "不包含载荷、燃料的无人机重量"}, {"label": "C", "text": "不包含载荷的无人机重量"}, {"label": "D", "text": "不包含载荷、电池的无人机重量"}]}, {"id": 36, "question": "使用多旋翼飞行器作业（  ）", "answer": "B", "options": [{"label": "A", "text": "应在人员密集区，如公园．广场等"}, {"label": "B", "text": "在规定空域使用，且起飞前提醒周边人群远离"}, {"label": "C", "text": "不受环境影响"}, {"label": "D", "text": "民用机场附件"}]}, {"id": 37, "question": "多轴飞行器 GPS 定位中，最少需要达到（  ）以上的卫星，才能够在飞行中保证基本的安全。", "answer": "B", "options": [{"label": "A", "text": "2—3颗"}, {"label": "B", "text": "4—5颗"}, {"label": "C", "text": "5—6颗"}, {"label": "D", "text": "6—7颗"}]}, {"id": 38, "question": "飞机的姿态需要通过加速度计、（  ）等惯性传感器进行测量。", "answer": "A", "options": [{"label": "A", "text": "陀螺仪"}, {"label": "B", "text": "GPS"}, {"label": "C", "text": "双目传感器"}, {"label": "D", "text": "位置传感器"}]}, {"id": 39, "question": "多轴飞行器的遥控器一般有（  ）", "answer": "A", "options": [{"label": "A", "text": "4个及以上通道"}, {"label": "B", "text": "2个通道"}, {"label": "C", "text": "3个通道"}, {"label": "D", "text": "6个通道"}]}, {"id": 40, "question": "多轴飞行器的飞控硬件尽量安装在（  ）", "answer": "B", "options": [{"label": "A", "text": "飞行器前部"}, {"label": "B", "text": "飞行器中心"}, {"label": "C", "text": "飞行器底部"}, {"label": "D", "text": "飞行器后部"}]}, {"id": 41, "question": "悬停状态下，多轴飞行器单个旋翼形成（  ）", "answer": "A", "options": [{"label": "A", "text": "倒锥体"}, {"label": "B", "text": "正锥体"}, {"label": "C", "text": "平面"}, {"label": "D", "text": "以上都不正确"}]}, {"id": 42, "question": "如果多轴飞行器安装的螺旋桨与电动机不匹配，桨尺寸过大，会带来的坏处不包括（  ）", "answer": "A", "options": [{"label": "A", "text": "飞控电流过大，造成损坏"}, {"label": "B", "text": "电机电流过大，造成损坏"}, {"label": "C", "text": "电调电流过大，造成损坏"}, {"label": "D", "text": "电机、电调电流过大，造成损坏"}]}, {"id": 43, "question": "八轴飞行器安装有（  ）", "answer": "B", "options": [{"label": "A", "text": "8个顺时针旋转螺旋桨"}, {"label": "B", "text": "4个顺时针旋转螺旋桨，4个逆时针旋转螺旋桨"}, {"label": "C", "text": "2个顺时针旋转螺旋桨，6个逆时针旋转螺旋桨"}, {"label": "D", "text": "8个逆时针旋转螺旋桨"}]}, {"id": 44, "question": "多轴无人机，电调上较细的白红黑3色排线，也叫杜邦线，用来连接（  ）", "answer": "A", "options": [{"label": "A", "text": "飞控"}, {"label": "B", "text": "机载遥控接收机"}, {"label": "C", "text": "电机"}, {"label": "D", "text": "电池"}]}, {"id": 45, "question": "不属于导航子系统所需导航要素信息的是（  ）。", "answer": "A", "options": [{"label": "A", "text": "经/纬度"}, {"label": "B", "text": "姿态角"}, {"label": "C", "text": "空速"}, {"label": "D", "text": "高度"}]}, {"id": 46, "question": "无人机搭载任务设备重量主要受（  ）限制。", "answer": "B", "options": [{"label": "A", "text": "飞机自重"}, {"label": "B", "text": "飞机载重能力"}, {"label": "C", "text": "飞机最大起飞能力"}, {"label": "D", "text": "发动机动力"}]}, {"id": 47, "question": "起飞前无人机、遥控器、地面控制站正确安全的通电顺序是：（  ）", "answer": "C", "options": [{"label": "A", "text": "无人机、地面站、遥控器"}, {"label": "B", "text": "遥控器、无人机、地面站"}, {"label": "C", "text": "地面站、遥控器、无人机"}, {"label": "D", "text": "无人机、遥控器、地面站"}]}, {"id": 48, "question": "无人机地面站系统不包括（  ）。", "answer": "A", "options": [{"label": "A", "text": "机载电台"}, {"label": "B", "text": "无人机控制站"}, {"label": "C", "text": "载荷控制站"}, {"label": "D", "text": "指挥中心"}]}, {"id": 49, "question": "线圈匝数越多的电机，kv值（  ）", "answer": "C", "options": [{"label": "A", "text": "越高"}, {"label": "B", "text": "无关"}, {"label": "C", "text": "越低"}, {"label": "D", "text": "不变"}]}, {"id": 50, "question": "多轴飞行器中的GPS天线应尽量安装在（  ）", "answer": "A", "options": [{"label": "A", "text": "飞行器顶部"}, {"label": "B", "text": "飞行器尾部"}, {"label": "C", "text": "飞行器中心"}, {"label": "D", "text": "飞行器前部"}]}, {"id": 51, "question": "绕多轴飞行器横轴的是什么运动（  ）", "answer": "B", "options": [{"label": "A", "text": "偏航运动"}, {"label": "B", "text": "俯仰运动"}, {"label": "C", "text": "滚转运动"}, {"label": "D", "text": "垂直运动"}]}, {"id": 52, "question": "有2个输出功率相同的电机，前者型号3508，后者型号2820，以下表述不正确的是（  ）", "answer": "C", "options": [{"label": "A", "text": "2820适用于更高的转速"}, {"label": "B", "text": "3508适合带动更大的螺旋桨"}, {"label": "C", "text": "尺寸上，2820粗一些，3508高一些"}, {"label": "D", "text": "尺寸上，2820高一些，3508粗一些"}]}, {"id": 53, "question": "绕多轴飞行器纵轴的是什么运动（  ）", "answer": "C", "options": [{"label": "A", "text": "俯仰运动"}, {"label": "B", "text": "偏航运动"}, {"label": "C", "text": "滚转运动"}, {"label": "D", "text": "垂直运动"}]}, {"id": 54, "question": "一架4轴飞行器，在其他任何设备都不更换的前提下，安装了4个大得多的螺旋桨，下面说法不一定正确的是（  ）", "answer": "A", "options": [{"label": "A", "text": "升力变大"}, {"label": "B", "text": "转速变慢"}, {"label": "C", "text": "桨盘载荷变小"}, {"label": "D", "text": "升力变小"}]}, {"id": 55, "question": "多轴飞行器上的电信号传播顺序一般为（  ）", "answer": "B", "options": [{"label": "A", "text": "飞控--电调--机载遥控接收机－－电机"}, {"label": "B", "text": "机载遥控接收机--飞控--电调--电机"}, {"label": "C", "text": "飞控--机载遥控接收机--电机--电调"}, {"label": "D", "text": "飞控--电调--电机--机载遥控接收机"}]}, {"id": 56, "question": "多轴飞行器起降时接触地面的（一般）是（  ）", "answer": "A", "options": [{"label": "A", "text": "脚架"}, {"label": "B", "text": "云台架"}, {"label": "C", "text": "机架"}, {"label": "D", "text": "机底"}]}, {"id": 57, "question": "绕多轴飞行器立轴的是什么运动（  ）", "answer": "A", "options": [{"label": "A", "text": "偏航运动"}, {"label": "B", "text": "俯仰运动"}, {"label": "C", "text": "滚转运动"}, {"label": "D", "text": "垂直运动"}]}, {"id": 58, "question": "如不考虑结构、尺寸、安全性等其他因素，单纯从气动效率出发，同样起飞重量的8轴飞行器与4轴飞行器（  ）", "answer": "C", "options": [{"label": "A", "text": "8轴效率高"}, {"label": "B", "text": "效率一样"}, {"label": "C", "text": "4轴效率高"}, {"label": "D", "text": "无法确定"}]}, {"id": 59, "question": "无人机驾驶员在遇到飞行异常情况时，应立即（  ） 处理。", "answer": "B", "options": [{"label": "A", "text": "调整航向"}, {"label": "B", "text": "降落"}, {"label": "C", "text": "报告上级"}, {"label": "D", "text": "加速飞行"}]}, {"id": 60, "question": "用遥控器设置电调，需要（  ）", "answer": "A", "options": [{"label": "A", "text": "接上电机"}, {"label": "B", "text": "断开动力电源"}, {"label": "C", "text": "断开电机"}, {"label": "D", "text": "安装螺旋桨"}]}, {"id": 61, "question": "某多轴电调上标有“30A”字样，意思是指（  ）", "answer": "C", "options": [{"label": "A", "text": "电调所能承受的稳定工作电流是30安培"}, {"label": "B", "text": "电调所能承受的最小工作电流是30安培"}, {"label": "C", "text": "电调所能承受的最大瞬间电流是30安培"}, {"label": "D", "text": "以上均不正确"}]}, {"id": 62, "question": "4轴飞行器有“X”模式和“＋”模式两大类，其中（  ）", "answer": "B", "options": [{"label": "A", "text": "两种模式操纵性没有区别"}, {"label": "B", "text": "“X”模式操纵性好"}, {"label": "C", "text": "“＋”模式操纵性好"}, {"label": "D", "text": "两者操纵性都不好"}]}, {"id": 63, "question": "民用无人机驾驶员多旋翼类别视距内等级申请人必须具有不少于（  ）小时的单飞训练时间。", "answer": "C", "options": [{"label": "A", "text": "6"}, {"label": "B", "text": "10"}, {"label": "C", "text": "5"}, {"label": "D", "text": "20"}]}, {"id": 64, "question": "以下地面链路天线哪一种是定向天线。（  ）", "answer": "A", "options": [{"label": "A", "text": "八木天线"}, {"label": "B", "text": "鞭状天线"}, {"label": "C", "text": "三叶草天线"}, {"label": "D", "text": "以上均不正确"}]}, {"id": 65, "question": "固定翼无人机配平主要考虑的是（  ）沿纵轴的前后位置。", "answer": "C", "options": [{"label": "A", "text": "气动焦点"}, {"label": "B", "text": "发动机"}, {"label": "C", "text": "重心"}, {"label": "D", "text": "中心"}]}, {"id": 66, "question": "光流传感器是通过连续采集图像帧进行光流运算获取无人机的水平运动速度，实现无人机对自身状态感知的传感器模块，因此，传感器适用于（  ）。", "answer": "C", "options": [{"label": "A", "text": "丘陵地貌飞行"}, {"label": "B", "text": "城市高楼间飞行"}, {"label": "C", "text": "室内飞行定位"}, {"label": "D", "text": "可以适用于所有环境定位"}]}, {"id": 67, "question": "（  ）的功能是向无人机各用电系统或设备提供满足预定设计要求的电能。", "answer": "A", "options": [{"label": "A", "text": "供电系统"}, {"label": "B", "text": "配电系统"}, {"label": "C", "text": "电源"}, {"label": "D", "text": "机载遥控接收机"}]}, {"id": 68, "question": "当无人机在天气恶劣的条件下飞行时，操作员应该（  ）。", "answer": "B", "options": [{"label": "A", "text": "增加飞行速度以缩短在恶劣天气中的飞行时间"}, {"label": "B", "text": "终止飞行并等待天气转好"}, {"label": "C", "text": "降低飞行高度以避免恶劣天气"}, {"label": "D", "text": "依赖无人机自动飞行系统来保持稳定"}]}, {"id": 69, "question": "多旋翼飞行器的飞控指的是（  ）", "answer": "C", "options": [{"label": "A", "text": "机载任务系统"}, {"label": "B", "text": "机载遥控接收机"}, {"label": "C", "text": "机载导航飞控系统"}, {"label": "D", "text": "电子调速器"}]}, {"id": 70, "question": "气压传感器在飞行器飞行中不能实现的功能是（  ）。", "answer": "D", "options": [{"label": "A", "text": "实时测量飞行器的高度"}, {"label": "B", "text": "可以实现定高飞行"}, {"label": "C", "text": "可以实现编队飞行控制"}, {"label": "D", "text": "可以测量飞机的方向变化率"}]}, {"id": 71, "question": "（  ）传感器是飞行控制系统的基本传感器之一，用以改善系统的阻尼特性。", "answer": "C", "options": [{"label": "A", "text": "空速"}, {"label": "B", "text": "迎角、侧滑角"}, {"label": "C", "text": "角速率"}, {"label": "D", "text": "GPS卫星导航接收机"}]}, {"id": 72, "question": "飞行控制器中的加速度传感器，可以测量飞行器（  ）信息。", "answer": "A", "options": [{"label": "A", "text": "速度变化率"}, {"label": "B", "text": "飞行速度"}, {"label": "C", "text": "飞行高角"}, {"label": "D", "text": "滚转角度"}]}, {"id": 73, "question": "位置传感器用于感受无人机的位置，是飞行轨迹控制的必要前提。（  ）是典型的位置传感器。", "answer": "C", "options": [{"label": "A", "text": "角速率传感器"}, {"label": "B", "text": "加速度传感器"}, {"label": "C", "text": "GPS卫星导航接收机"}, {"label": "D", "text": "超声波传感器"}]}, {"id": 74, "question": "无人的发动机采用重力供油系统但装有增压泵，主要是为了（  ）", "answer": "A", "options": [{"label": "A", "text": "保证爬升、下降及其它特殊情况下的正常供油"}, {"label": "B", "text": "保证大速度巡航的用油"}, {"label": "C", "text": "减少油箱的剩余燃油"}, {"label": "D", "text": "以上均不正确"}]}, {"id": 75, "question": "如果数传链路下行中断，会发生的后果。（  ）", "answer": "C", "options": [{"label": "A", "text": "无法在线重规划航线航点及发送任务指令"}, {"label": "B", "text": "无人机航拍图传图像丢失"}, {"label": "C", "text": "地面站不再更新无人机的遥测数据"}, {"label": "D", "text": "以上均不正确"}]}, {"id": 76, "question": "如果数据链路_上行中断，会发生的后果。（  ）", "answer": "C", "options": [{"label": "A", "text": "无人机退出地面站控制模式"}, {"label": "B", "text": "不能获取无人机状态信息"}, {"label": "C", "text": "无法在线重规划航线航点及发送任务指令"}, {"label": "D", "text": "以上均不正确"}]}, {"id": 77, "question": "民用无人机驾驶员多旋翼类别视距内等级申请人必须具有不少于（  ）小时的带飞训练时间。", "answer": "D", "options": [{"label": "A", "text": "30"}, {"label": "B", "text": "20"}, {"label": "C", "text": "15"}, {"label": "D", "text": "10"}]}, {"id": 78, "question": "III类无人机是指机（  ）。", "answer": "B", "options": [{"label": "A", "text": "4kg≤空机质量≤15kg，7kg≤起飞全重≤25kg"}, {"label": "B", "text": "4kg＜空机质量≤15kg，7kg＜起飞全重≤25kg"}, {"label": "C", "text": "7kg＜空机质量≤10kg，10kg＜起飞全重≤25kg"}, {"label": "D", "text": "7kg≤空机质量≤10kg，10kg≤起飞全重≤20kg"}]}, {"id": 79, "question": "地面站地图航迹显示系统可为无人机驾驶员提供飞机（  ）等信息。", "answer": "B", "options": [{"label": "A", "text": "飞行姿态"}, {"label": "B", "text": "位置"}, {"label": "C", "text": "飞控状态"}, {"label": "D", "text": "电池电量"}]}, {"id": 80, "question": "（  ）应具备的功能包括：标准飞行轨道生成功能，常规的飞行航线生成、管理功能。", "answer": "A", "options": [{"label": "A", "text": "航线规划"}, {"label": "B", "text": "任务规划"}, {"label": "C", "text": "航迹规划"}, {"label": "D", "text": "运动规划"}]}, {"id": 81, "question": "目前主流的民用无人机所采用的动力系统通常为活塞式发动机和（  ）两种。", "answer": "C", "options": [{"label": "A", "text": "火箭发动机"}, {"label": "B", "text": "涡扇发动机"}, {"label": "C", "text": "电动机"}, {"label": "D", "text": "涡轮发动机"}]}, {"id": 82, "question": "任务规划的主要目标是依据地形信息和执行任务环境条件信息，综合考虑无人机的性能、到达时间、耗能、威胁以及飞行区域等约束条件，为无人机规划出一条或多条自（  ）的（    ），保证无人机高效、圆满地完成飞行任务，并安全返回基地。", "answer": "C", "options": [{"label": "A", "text": "起点到终点，最短路径"}, {"label": "B", "text": "起飞点到着陆点，最佳路径"}, {"label": "C", "text": "出发点到目标点，最优或次优航迹"}, {"label": "D", "text": "起点到终点，最佳路径"}]}, {"id": 83, "question": "（  ）主要用于飞行区域内重点目标的标注，如建筑物、禁飞区、人口密集区等易影响飞行安全的区域。", "answer": "C", "options": [{"label": "A", "text": "场地标注"}, {"label": "B", "text": "任务区域标注"}, {"label": "C", "text": "警示标注"}, {"label": "D", "text": "以上均不正确"}]}, {"id": 84, "question": "（  ）包括在执行任务的过程中，需要根据环境情况的变化制定一些通信任务，调整与任务控制站之间的通信方式等。", "answer": "C", "options": [{"label": "A", "text": "目标分配"}, {"label": "B", "text": "链路规划"}, {"label": "C", "text": "通信规划"}, {"label": "D", "text": "航线规划"}]}, {"id": 85, "question": "无人机物理限制对飞行航迹有以下限制：（  ），（    ），最小航迹段长度，最低安全飞行高度。", "answer": "C", "options": [{"label": "A", "text": "最小转弯半径，最小俯仰角"}, {"label": "B", "text": "最大转弯半径，最小俯仰角"}, {"label": "C", "text": "最小转弯半径，最大俯仰角"}, {"label": "D", "text": "最大转弯半径，最大俯仰角"}]}, {"id": 86, "question": "无人机任务规划需要考虑的因素有：（  ），（    ）无人机物理限制，实时性要求。", "answer": "C", "options": [{"label": "A", "text": "飞行任务范围，飞行安全限制"}, {"label": "B", "text": "飞行安全限制，飞行任务要求"}, {"label": "C", "text": "飞行环境限制，飞行任务要求"}, {"label": "D", "text": "飞行任务范围，飞行任务要求"}]}, {"id": 87, "question": "应急航线的主要目的是确保飞机安全返航，规划一条安全返航通道和（    ），以及（  ）", "answer": "B", "options": [{"label": "A", "text": "应急迫降点，安全返航策略"}, {"label": "B", "text": "应急迫降点，航线转移策略"}, {"label": "C", "text": "安全着陆点，安全着陆策略"}, {"label": "D", "text": "安全着陆点，安全返航策略"}]}, {"id": 88, "question": "活塞式发动机系统常采用的增压技术主要是用来（  ）。", "answer": "A", "options": [{"label": "A", "text": "提高功率"}, {"label": "B", "text": "减少废气量"}, {"label": "C", "text": "增加转速"}, {"label": "D", "text": "加快转速"}]}, {"id": 89, "question": "遥控无人机着陆时，下列哪种情况需要复飞（  ）", "answer": "B", "options": [{"label": "A", "text": "飞机油料不足"}, {"label": "B", "text": "跑道上有飞机或其他障碍物影响着陆安全时"}, {"label": "C", "text": "飞机稍稍偏离期望下滑线"}, {"label": "D", "text": "侧风较大"}]}, {"id": 90, "question": "无人机左侧风中起飞，侧风有使飞机机头向（  ）偏转的趋势", "answer": "A", "options": [{"label": "A", "text": "左"}, {"label": "B", "text": "右"}, {"label": "C", "text": "视风速的大小不同可能向左也可能向右"}, {"label": "D", "text": "方向不变"}]}, {"id": 91, "question": "飞行驾驶员操纵无人机定高平飞时，下列正确的操纵是（  ）", "answer": "A", "options": [{"label": "A", "text": "不断检查空速、高度和航向指示"}, {"label": "B", "text": "偶尔关注一下空速、高度和航向指示"}, {"label": "C", "text": "定高平飞结束前可以休息"}, {"label": "D", "text": "不用关注"}]}, {"id": 92, "question": "姿态遥控模式下操纵无人机爬升，飞机速度减小太多时，下列正确的操纵是（  ）", "answer": "C", "options": [{"label": "A", "text": "迅速关闭发动机"}, {"label": "B", "text": "迅速增大俯仰角"}, {"label": "C", "text": "迅速减小俯仰角"}, {"label": "D", "text": "继续飞行"}]}, {"id": 93, "question": "姿态遥控模式下操纵无人机爬升，飞机航向向左偏离时，下列正确的操纵是（  ）", "answer": "A", "options": [{"label": "A", "text": "应柔和地向右扭舵"}, {"label": "B", "text": "应柔和地向左扭舵"}, {"label": "C", "text": "应柔和地向前顶杆"}, {"label": "D", "text": "应迅速地向右扭舵"}]}, {"id": 94, "question": "无人机驾驶员操纵无人机下降时，油门状态描述正确的是（  ）", "answer": "B", "options": [{"label": "A", "text": "油门置于中间状态留足操纵空间"}, {"label": "B", "text": "小油门便于飞机下降"}, {"label": "C", "text": "大油门保证飞机速度"}, {"label": "D", "text": "快速收油门快速下降"}]}, {"id": 95, "question": "飞行驾驶员姿态遥控模式下操纵无人机下降，速度过大时，下列正确的操纵是（  ）", "answer": "A", "options": [{"label": "A", "text": "适当增加带杆量，减小下滑角"}, {"label": "B", "text": "适当减小带杆量，减小下滑角"}, {"label": "C", "text": "适当减小带杆量，增大下滑角"}, {"label": "D", "text": "适当增加带杆量，增大下滑角"}]}, {"id": 96, "question": "下列不属于飞行后进行的内容是（  ）", "answer": "B", "options": [{"label": "A", "text": "检讨飞行执行过程"}, {"label": "B", "text": "规划飞行航线"}, {"label": "C", "text": "填写飞行日志"}, {"label": "D", "text": "填写飞行记录本"}]}, {"id": 97, "question": "无人机驾驶员操纵无人机下降到10米以下时，应重点关注的信息是（  ）", "answer": "B", "options": [{"label": "A", "text": "飞机航行灯开闭状态"}, {"label": "B", "text": "飞机下降速度、姿态和空速"}, {"label": "C", "text": "飞机剩余电量"}, {"label": "D", "text": "地面环境"}]}, {"id": 98, "question": "遥控无人机着陆拉平时，拉杆的快慢和下降速度的关系是（  ）", "answer": "B", "options": [{"label": "A", "text": "下降慢，拉杆应快一些"}, {"label": "B", "text": "下降慢，拉杆应慢一些"}, {"label": "C", "text": "还按正常时机拉杆"}, {"label": "D", "text": "下降快，拉杆应慢一些"}]}, {"id": 99, "question": "四旋翼无人机，飞行中（  ）可改变航向。", "answer": "B", "options": [{"label": "A", "text": "相邻的２个桨加速，另２个桨减速"}, {"label": "B", "text": "相对的２个桨加速，另２个桨减速"}, {"label": "C", "text": "４个桨均加速"}, {"label": "D", "text": "４个桨均减速"}]}, {"id": 100, "question": "多旋翼无人机使用的电调通常被划分为（  ）。", "answer": "C", "options": [{"label": "A", "text": "直流电调和交流电调"}, {"label": "B", "text": "有极电调和无极电调"}, {"label": "C", "text": "有刷电调和无刷电调"}, {"label": "D", "text": "直流电调和无极电调"}]}, {"id": 101, "question": "在植保作业过程中，下列做法正确的是（  ）。", "answer": "C", "options": [{"label": "A", "text": "将植保无人机飞行到人员头顶之上"}, {"label": "B", "text": "降落时桨叶尚未停转就靠近植保无人机"}, {"label": "C", "text": "飞行时人员与植保无人机时刻保持 6 米以上距离"}, {"label": "D", "text": "飞行时将植保无人机飞行到 30 米高度，越过高压线"}]}, {"id": 102, "question": "下列关于操作人员要求，描述错误的是（  ）。", "answer": "D", "options": [{"label": "A", "text": "不可将植保无人机操作到人员正上方，不可接近飞行中的无人机"}, {"label": "B", "text": "植保无人机提示需磁罗盘校准时，第一时间进行校准"}, {"label": "C", "text": "飞行前8小时禁止饮酒"}, {"label": "D", "text": "作业区域有农户在拔草，依然继续作业"}]}, {"id": 103, "question": "下列关于操作无人机禁止行为，描述错误的是  （  ）。", "answer": "D", "options": [{"label": "A", "text": "禁止任何形式的载人操作"}, {"label": "B", "text": "禁止靠近及抓握飞行当中的无人机"}, {"label": "C", "text": "禁止操作无人机飞行至密集人群上空"}, {"label": "D", "text": "飞行中的无人机失控时可手接飞行器"}]}, {"id": 104, "question": "以下操作符合安全规范的是（  ）。", "answer": "B", "options": [{"label": "A", "text": "在无人机旋转的旋翼下方吹风乘凉"}, {"label": "B", "text": "初次飞行时，在空旷地区操作无人机，并且保持安全距离"}, {"label": "C", "text": "用手触摸高速旋转中的螺旋桨"}, {"label": "D", "text": "在密集人群上方飞行"}]}, {"id": 105, "question": "无人机在控制增稳飞行控制模式下，期间飞控子系统（  ）控制。", "answer": "A", "options": [{"label": "A", "text": "参与"}, {"label": "B", "text": "不参与"}, {"label": "C", "text": "不确定"}, {"label": "D", "text": "以上均不正确"}]}, {"id": 106, "question": "当前国内民用无人机的主要控制方式不包括（  ）", "answer": "C", "options": [{"label": "A", "text": "自主控制"}, {"label": "B", "text": "人工遥控"}, {"label": "C", "text": "人工智能"}, {"label": "D", "text": "以上均不正确"}]}, {"id": 107, "question": "不属于无人机回收方式的是（  ）。", "answer": "B", "options": [{"label": "A", "text": "伞降"}, {"label": "B", "text": "飘落"}, {"label": "C", "text": "气囊回收"}, {"label": "D", "text": "撞网"}]}, {"id": 108, "question": "气温的变化，会严重影响电动无人机的哪项性能（  ）", "answer": "C", "options": [{"label": "A", "text": "载荷性能"}, {"label": "B", "text": "速度性能"}, {"label": "C", "text": "续航性能"}, {"label": "D", "text": "飞行高度"}]}, {"id": 109, "question": "固定翼飞机升力来源最大的区域为（  ）。", "answer": "A", "options": [{"label": "A", "text": "机翼"}, {"label": "B", "text": "机身"}, {"label": "C", "text": "起落架"}, {"label": "D", "text": "尾翼"}]}, {"id": 110, "question": "下面关于雾说法不正确的是。（  ）", "answer": "C", "options": [{"label": "A", "text": "大雾会影响无人机的起降手动操作"}, {"label": "B", "text": "大雾会影响无人机航拍任务设备效果"}, {"label": "C", "text": "大雾会影响无人机的航线自主飞行"}, {"label": "D", "text": "大雾会影响无人机巡检任务设备效果"}]}, {"id": 111, "question": "气压传感器测的是以下哪个高度（  ）", "answer": "A", "options": [{"label": "A", "text": "海拔高度"}, {"label": "B", "text": "无线电高度"}, {"label": "C", "text": "相对高度"}, {"label": "D", "text": "以上均不正确"}]}, {"id": 112, "question": "下列哪种动力电池放电电流最大（  ）。", "answer": "B", "options": [{"label": "A", "text": "20000mAh,5C"}, {"label": "B", "text": "8000mAh,20C"}, {"label": "C", "text": "2000mAh,30C"}, {"label": "D", "text": "3000mAh,25C"}]}, {"id": 113, "question": "在山区飞行时应当注意，最强的乱流出现在：（  ）", "answer": "A", "options": [{"label": "A", "text": "山谷中间"}, {"label": "B", "text": "山的迎风坡"}, {"label": "C", "text": "山的背风坡"}, {"label": "D", "text": "山顶"}]}, {"id": 114, "question": "高空无人机任务高度一般在（  ）。", "answer": "C", "options": [{"label": "A", "text": "100～1000m"}, {"label": "B", "text": "1000～7000m"}, {"label": "C", "text": "7000～18000m"}, {"label": "D", "text": "18000以上"}]}, {"id": 115, "question": "以下关于电池存储的注意事项，描述错误的是（  ）", "answer": "D", "options": [{"label": "A", "text": "应将电池电量保持在 40%—60%（电池指示灯两格或两格半）"}, {"label": "B", "text": "损坏的电池应单独存放，避免混放"}, {"label": "C", "text": "电池存储在干燥通风环境中，避免漏水、潮湿环境"}, {"label": "D", "text": "将电池长期低电量存放"}]}, {"id": 116, "question": "一般来讲，多旋翼飞行器在地面风速大于（  ）级时作业，会对飞行器安全和拍摄稳定有影响", "answer": "C", "options": [{"label": "A", "text": "2级"}, {"label": "B", "text": "6级"}, {"label": "C", "text": "4级"}, {"label": "D", "text": "5级"}]}, {"id": 117, "question": "电池在不使用的时候，应放置在（  ），并且要与易燃物隔开，做好防火措施。", "answer": "A", "options": [{"label": "A", "text": "干燥、常温"}, {"label": "B", "text": "湿度大"}, {"label": "C", "text": "太阳直射"}, {"label": "D", "text": "冰箱"}]}, {"id": 118, "question": "现有民用无人机多数在大气的哪一层内运行。（  ）", "answer": "C", "options": [{"label": "A", "text": "平流层"}, {"label": "B", "text": "热层"}, {"label": "C", "text": "对流层"}, {"label": "D", "text": "中层"}]}, {"id": 119, "question": "无人机安防中的电磁干扰是一种常见威胁，可以通过（  ）使无人机失去控制。", "answer": "B", "options": [{"label": "A", "text": "激光干扰"}, {"label": "B", "text": "GPS 干扰"}, {"label": "C", "text": "热能干扰"}, {"label": "D", "text": "声波干扰"}]}, {"id": 120, "question": "无人机在禁飞区域活动是一种严重违规行为， 以下哪种技术常被用作无人机的入侵检测和防护手段（  ）。", "answer": "A", "options": [{"label": "A", "text": "雷达技术"}, {"label": "B", "text": "反无人机系统"}, {"label": "C", "text": "光学识别器"}, {"label": "D", "text": "热成像设备"}]}, {"id": 121, "question": "民用无人机用于农林喷洒作业时，以下哪些人员要求其持有民用无人机驾驶员合格证并具有相应等级：①作业负责人；②独立喷洒作业人员；③作业高度在15米以上的作业人员。（  ）", "answer": "A", "options": [{"label": "A", "text": "①②③"}, {"label": "B", "text": "②③"}, {"label": "C", "text": "②"}, {"label": "D", "text": "①②"}]}, {"id": 122, "question": "无人机作业结束后，应（  ）。", "answer": "C", "options": [{"label": "A", "text": "只需清洗喷洒系统"}, {"label": "B", "text": "只需清洗机身"}, {"label": "C", "text": "整机清洗"}, {"label": "D", "text": "不用清洗"}]}, {"id": 123, "question": "无人机驾驶员进行起飞前飞行器检查内容不必包括（  ）", "answer": "C", "options": [{"label": "A", "text": "舵面结构及连接检查"}, {"label": "B", "text": "起飞（发射）、降落（回收）装置检查"}, {"label": "C", "text": "飞行器涂装"}, {"label": "D", "text": "电池电量"}]}, {"id": 124, "question": "遥控无人机由爬升转为平飞时 （  ）", "answer": "C", "options": [{"label": "A", "text": "到达预定高度时，开始改平飞"}, {"label": "B", "text": "超过预定高度10—20米时，开始改平飞"}, {"label": "C", "text": "上升至预定高度前10—20米时，开始改平飞"}, {"label": "D", "text": "超过预定高度5—10米时，开始改平飞"}]}, {"id": 125, "question": "无人机违反安全规定时，可通过（  ）来干扰其控制信号。", "answer": "C", "options": [{"label": "A", "text": "硬件屏蔽"}, {"label": "B", "text": "声波干扰"}, {"label": "C", "text": "频率干扰"}, {"label": "D", "text": "引力干扰"}]}, {"id": 126, "question": "以下（  ）可以对无人机进行实时的视觉监测和分析，辅助无人机安防。", "answer": "D", "options": [{"label": "A", "text": "高清摄像技术"}, {"label": "B", "text": "激光雷达技术"}, {"label": "C", "text": "红外热像仪技术"}, {"label": "D", "text": "智能图像识别技术"}]}, {"id": 127, "question": "无人机飞行员操纵副翼时，飞机将绕（  ）。", "answer": "B", "options": [{"label": "A", "text": "横轴的俯仰运动"}, {"label": "B", "text": "纵轴的滚转运动"}, {"label": "C", "text": "立轴的偏转运动"}, {"label": "D", "text": "不确定"}]}, {"id": 128, "question": "在无人机安防应用中，航线规划需要考虑的因素不包括（  ）。", "answer": "D", "options": [{"label": "A", "text": "飞行高度"}, {"label": "B", "text": "飞行速度"}, {"label": "C", "text": "飞行时间"}, {"label": "D", "text": "天气状况"}]}, {"id": 129, "question": "放全襟翼下降，无人机能以（  ）。", "answer": "A", "options": [{"label": "A", "text": "较大的下降角，较小的速度下降"}, {"label": "B", "text": "较小的下降角，较大的速度下降"}, {"label": "C", "text": "较大的下降角，较大的速度下降"}, {"label": "D", "text": "较小的下降角，较小的速度下降"}]}, {"id": 130, "question": "不应属于无人机飞控计算机任务范畴的是（  ）。", "answer": "A", "options": [{"label": "A", "text": "数据中继"}, {"label": "B", "text": "姿态稳定与控制"}, {"label": "C", "text": "自主飞行控制"}, {"label": "D", "text": "导航和定位"}]}, {"id": 131, "question": "无人机通过（  ）控制舵面和发动机节风门来实现无人机控制。", "answer": "A", "options": [{"label": "A", "text": "伺服执行机构"}, {"label": "B", "text": "操作杆"}, {"label": "C", "text": "脚蹬"}, {"label": "D", "text": "电机"}]}, {"id": 132, "question": "无人机的信号干扰可以运用（  ）进行探测和对抗。", "answer": "A", "options": [{"label": "A", "text": "频谱分析技术"}, {"label": "B", "text": "无线电干扰技术"}, {"label": "C", "text": "光学识别技术"}, {"label": "D", "text": "音频处理技术"}]}, {"id": 133, "question": "经测试，某多轴飞行器稳定飞行时，动力电池的持续输出电流为5安培，该多轴可以选用（  ）", "answer": "C", "options": [{"label": "A", "text": "5A的电调"}, {"label": "B", "text": "10A的电调"}, {"label": "C", "text": "30A的电调"}, {"label": "D", "text": "无法确定"}]}, {"id": 134, "question": "目前技术条件下，燃油发动机不适合作为多轴飞行器动力的原因，表述不正确的是（  ）", "answer": "A", "options": [{"label": "A", "text": "生物燃料能量密度低于锂电池"}, {"label": "B", "text": "调速时响应较慢，且出于安全性原因需要稳定转速工作"}, {"label": "C", "text": "尺寸，重量较大"}, {"label": "D", "text": "燃油发动机结构复杂，稳定性较差"}]}, {"id": 135, "question": "（  ）主要是由飞行操纵、任务载荷控制、数据链路控制和通信指挥等组成，可完成对无人机机载任务载荷等的操纵控制。", "answer": "B", "options": [{"label": "A", "text": "指挥处理中心"}, {"label": "B", "text": "无人机控制站"}, {"label": "C", "text": "载荷控制站"}, {"label": "D", "text": "数据中继站"}]}, {"id": 136, "question": "在升高及下降过程中，无人直升机及多轴飞行器表述正确的是（  ）", "answer": "A", "options": [{"label": "A", "text": "无人直升机主要改变旋翼总距，多轴飞行器主要改变旋翼转速"}, {"label": "B", "text": "无人直升机主要改变旋翼转速，多轴飞行器主要改变旋翼总距"}, {"label": "C", "text": "无人直升机主要改变旋翼转速，多轴飞行器同样改变旋翼转速"}, {"label": "D", "text": "无人直升机主要改变旋翼总距，多轴飞行器主要改变旋翼总距"}]}, {"id": 137, "question": "部分商用多轴飞行器有收放脚架功能或机架整体变形功能，其主要目的是（  ）", "answer": "A", "options": [{"label": "A", "text": "改善机载任务设备视野"}, {"label": "B", "text": "调整重心增加飞行器稳定性"}, {"label": "C", "text": "减小前飞废阻力"}, {"label": "D", "text": "吸引客户"}]}, {"id": 138, "question": "无人机电气系统中电源和（  ）两者组合统称为供电系统。", "answer": "B", "options": [{"label": "A", "text": "用电设备"}, {"label": "B", "text": "配电系统"}, {"label": "C", "text": "供电线路"}, {"label": "D", "text": "导线"}]}, {"id": 139, "question": "多轴飞行器使用的锂聚合物动力电池，其单体标称电压为（  ）。", "answer": "C", "options": [{"label": "A", "text": "11.1V"}, {"label": "B", "text": "4.8V"}, {"label": "C", "text": "3.7V"}, {"label": "D", "text": "2.8V"}]}, {"id": 140, "question": "悬停状态的四轴飞行器如何实现向左移动（  ）", "answer": "B", "options": [{"label": "A", "text": "纵轴右侧的螺旋桨减速，纵轴左侧的螺旋桨加速"}, {"label": "B", "text": "纵轴右侧的螺旋桨加速，纵轴左侧的螺旋桨减速"}, {"label": "C", "text": "横轴前侧的螺旋桨加速，横轴后侧的螺旋桨减速"}, {"label": "D", "text": "横轴前侧的螺旋桨减速，横轴后侧的螺旋桨加速"}]}, {"id": 141, "question": "悬停状态的四轴飞行器如何实现向后移动（  ）", "answer": "C", "options": [{"label": "A", "text": "纵轴右侧的螺旋桨减速，纵轴左侧的螺旋桨加速"}, {"label": "B", "text": "横轴前侧的螺旋桨减速，横轴后侧的螺旋桨加速"}, {"label": "C", "text": "横轴前侧的螺旋桨加速，横轴后侧的螺旋桨减速"}, {"label": "D", "text": "横轴前侧的螺旋桨减速，横轴后侧的螺旋桨加速"}]}, {"id": 142, "question": "以下不是多轴飞行器优点的是（  ）。", "answer": "A", "options": [{"label": "A", "text": "气动效率高"}, {"label": "B", "text": "结构简单"}, {"label": "C", "text": "稳定性较高"}, {"label": "D", "text": "机动性好"}]}, {"id": 143, "question": "在无人机安防应用中，飞行时间主要受（  ）因素的影响。", "answer": "A", "options": [{"label": "A", "text": "电池容量"}, {"label": "B", "text": "通信信号强度"}, {"label": "C", "text": "GPS精度"}, {"label": "D", "text": "飞行高度"}]}, {"id": 144, "question": "为了减少无人机对空域安全的威胁，可以建立（  ）来监控和管理无人机飞行活动。", "answer": "D", "options": [{"label": "A", "text": "无人机管制区"}, {"label": "B", "text": "禁飞区"}, {"label": "C", "text": "飞行限制区域"}, {"label": "D", "text": "空中交通管制区"}]}, {"id": 145, "question": "无人机在无线通信中使用的专用频段被称为（  ）。", "answer": "A", "options": [{"label": "A", "text": "无人机频段"}, {"label": "B", "text": "通信频段"}, {"label": "C", "text": "数据传输频段"}, {"label": "D", "text": "无人机空中频段"}]}, {"id": 146, "question": "部分多轴飞行器会安装垂尾（  ）", "answer": "C", "options": [{"label": "A", "text": "会减小高速前飞时的稳定性，增加悬停时的稳定性"}, {"label": "B", "text": "会增加高速前飞时的稳定性，增加悬停时的稳定性"}, {"label": "C", "text": "会增加高速前飞时的稳定性，减小悬停时的稳定性"}, {"label": "D", "text": "会减小高速前飞时的稳定性，减小悬停时的稳定性"}]}, {"id": 147, "question": "以下飞行器不是多轴飞行器的是（  ）", "answer": "C", "options": [{"label": "A", "text": "Phantom精灵"}, {"label": "B", "text": "Inspire悟"}, {"label": "C", "text": "Uh-60黑鹰"}, {"label": "D", "text": "Mavic御"}]}, {"id": 148, "question": "无人机最常见的传感器技术是（  ）。", "answer": "A", "options": [{"label": "A", "text": "摄像机"}, {"label": "B", "text": "毫米波雷达"}, {"label": "C", "text": "红外线传感器"}, {"label": "D", "text": "声呐传感器"}]}, {"id": 149, "question": "无人机的飞行高度一般受到（  ）的限制。", "answer": "B", "options": [{"label": "A", "text": "气象条件"}, {"label": "B", "text": "航空管制"}, {"label": "C", "text": "GPS 信号"}, {"label": "D", "text": "电池寿命"}]}, {"id": 150, "question": "当多轴飞行器地面站出现飞行器电压过低报警时，第一时刻采取的措施不包括（  ）", "answer": "A", "options": [{"label": "A", "text": "迅速将油门收到0"}, {"label": "B", "text": "一键返航"}, {"label": "C", "text": "控制姿态，逐渐降低高度，迫降至地面"}, {"label": "D", "text": "不要惊慌，沉着冷静"}]}];
+
+let currentQuestions = [];
+let currentIndex = 0;
+let userAnswers = {};
+let mode = '';
+let answered = {};
+let selectedQty = 0; // 记录随机刷题选择的题量
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// 点击随机刷题卡片，显示题量选择面板
+function selectRandomMode() {
+  const panel = document.getElementById('qty-panel');
+  panel.classList.toggle('hidden');
+  // 清除之前选中状态
+  document.querySelectorAll('.qty-btn').forEach(b => b.classList.remove('selected'));
+  selectedQty = 0;
+}
+
+// 选择题量后开始随机刷题
+function selectQty(qty, btn) {
+  selectedQty = qty;
+  document.querySelectorAll('.qty-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  startQuiz('random');
+}
+
+function startQuiz(m) {
+  mode = m;
+  if (m === 'random') {
+    const shuffled = shuffle(QUESTIONS);
+    const qty = selectedQty || shuffled.length;
+    currentQuestions = shuffled.slice(0, Math.min(qty, shuffled.length));
+  } else {
+    currentQuestions = [...QUESTIONS];
+  }
+  currentIndex = 0;
+  userAnswers = {};
+  answered = {};
+  document.getElementById('home').classList.add('hidden');
+  document.getElementById('result').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  const label = m === 'random'
+    ? `随机模式（${currentQuestions.length}题）`
+    : '按序模式';
+  document.getElementById('mode-label').textContent = label;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  // 清除之前的自动跳转定时器
+  if (autoNextTimer) {
+    clearInterval(autoNextTimer);
+    autoNextTimer = null;
+  }
+  const q = currentQuestions[currentIndex];
+  const total = currentQuestions.length;
+  document.getElementById('progress-text').textContent = `${currentIndex + 1} / ${total}`;
+  document.getElementById('progress-fill').style.width = `${((currentIndex + 1) / total) * 100}%`;
+  document.getElementById('question-num').textContent = `第 ${q.id} 题`;
+  document.getElementById('question-text').textContent = q.question;
+
+  const optContainer = document.getElementById('options');
+  optContainer.innerHTML = '';
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="label">${opt.label}</span>${opt.text}`;
+    btn.onclick = () => selectOption(q.id, opt.label, btn);
+    if (answered[q.id]) {
+      btn.style.pointerEvents = 'none';
+      if (opt.label === q.answer) btn.classList.add('correct');
+      if (opt.label === userAnswers[q.id] && opt.label !== q.answer) btn.classList.add('wrong');
+      if (opt.label === userAnswers[q.id]) btn.classList.add('selected');
+    }
+    optContainer.appendChild(btn);
+  });
+
+  const exp = document.getElementById('explanation');
+  if (answered[q.id]) {
+    exp.classList.remove('hidden');
+    const isCorrect = userAnswers[q.id] === q.answer;
+    exp.textContent = isCorrect ? '回答正确！' : `回答错误，正确答案是 ${q.answer}`;
+    exp.style.background = isCorrect ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
+    exp.style.borderColor = isCorrect ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)';
+    exp.style.color = isCorrect ? '#86efac' : '#fca5a5';
+  } else {
+    exp.classList.add('hidden');
+  }
+
+  document.getElementById('btn-prev').disabled = currentIndex === 0;
+  document.getElementById('btn-next').textContent = currentIndex === total - 1 ? '查看结果' : '下一题 →';
+}
+
+let autoNextTimer = null;
+
+function selectOption(qId, label, btn) {
+  if (answered[qId]) return;
+  answered[qId] = true;
+  userAnswers[qId] = label;
+  const q = currentQuestions[currentIndex];
+  const allBtns = document.querySelectorAll('.option');
+  allBtns.forEach(b => { b.style.pointerEvents = 'none'; });
+  if (label === q.answer) {
+    btn.classList.add('selected', 'correct');
+  } else {
+    btn.classList.add('selected', 'wrong');
+    allBtns.forEach(b => {
+      const bLabel = b.querySelector('.label').textContent;
+      if (bLabel === q.answer) b.classList.add('correct');
+    });
+  }
+  const exp = document.getElementById('explanation');
+  exp.classList.remove('hidden');
+  const isCorrect = label === q.answer;
+  const baseText = isCorrect ? '回答正确！' : `回答错误，正确答案是 ${q.answer}`;
+  exp.style.background = isCorrect ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
+  exp.style.borderColor = isCorrect ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)';
+  exp.style.color = isCorrect ? '#86efac' : '#fca5a5';
+
+  // 5秒倒计时自动跳转
+  if (autoNextTimer) clearInterval(autoNextTimer);
+  let countdown = 5;
+  exp.textContent = baseText + `  (${countdown}s后自动下一题)`;
+  autoNextTimer = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      exp.textContent = baseText + `  (${countdown}s后自动下一题)`;
+    } else {
+      clearInterval(autoNextTimer);
+      nextQuestion();
+    }
+  }, 1000);
+}
+
+function nextQuestion() {
+  if (currentIndex < currentQuestions.length - 1) {
+    currentIndex++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function prevQuestion() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('result').classList.remove('hidden');
+  document.getElementById('wrong-list').classList.add('hidden');
+
+  let correct = 0, wrong = 0, unanswered = 0;
+  const wrongItems = [];
+  currentQuestions.forEach(q => {
+    if (!answered[q.id]) {
+      unanswered++;
+      wrongItems.push(q);
+    } else if (userAnswers[q.id] === q.answer) {
+      correct++;
+    } else {
+      wrong++;
+      wrongItems.push(q);
+    }
+  });
+  const answered_count = correct + wrong;
+  const total = currentQuestions.length;
+  const rate = answered_count > 0 ? Math.round((correct / answered_count) * 100) : 0;
+
+  document.getElementById('score-num').textContent = rate + '%';
+  document.getElementById('correct-count').textContent = correct;
+  document.getElementById('wrong-count').textContent = wrong + unanswered;
+  document.getElementById('total-count').textContent = total;
+
+  const ring = document.getElementById('score-ring');
+  const hue = rate * 1.2;
+  ring.style.background = `conic-gradient(hsl(${hue},70%,50%) ${rate * 3.6}deg, rgba(51,65,85,0.5) 0deg)`;
+  ring.style.padding = '6px';
+  ring.innerHTML = `<div style="width:168px;height:168px;border-radius:50%;background:#0f172a;display:flex;align-items:center;justify-content:center;flex-direction:column"><div class="score-num" style="color:hsl(${hue},70%,60%)">${rate}%</div><div class="score-label">正确率</div></div>`;
+
+  if (mode === 'wrong') {
+    document.getElementById('result-title').textContent = '错题重答完成';
+    document.getElementById('result-desc').textContent = `本次重答 ${total} 道错题，答对 ${correct} 题，正确率 ${rate}%`;
+  } else if (rate >= 90) {
+    document.getElementById('result-title').textContent = '太棒了！';
+    document.getElementById('result-desc').textContent = '你对无人机知识掌握得非常好！';
+  } else if (rate >= 70) {
+    document.getElementById('result-title').textContent = '还不错！';
+    document.getElementById('result-desc').textContent = '继续加油，争取更高分数！';
+  } else if (rate >= 50) {
+    document.getElementById('result-title').textContent = '继续努力！';
+    document.getElementById('result-desc').textContent = '还需要多加练习哦！';
+  } else {
+    document.getElementById('result-title').textContent = '需要加油！';
+    document.getElementById('result-desc').textContent = '建议重新复习知识点再来刷题！';
+  }
+
+  // 随机模式下显示"继续随机刷题"按钮
+  const btnContinue = document.getElementById('btn-continue');
+  if (mode === 'random') {
+    btnContinue.classList.remove('hidden');
+  } else {
+    btnContinue.classList.add('hidden');
+  }
+  // 有错题时显示"错题重答"按钮
+  const btnRedoWrong = document.getElementById('btn-redo-wrong');
+  if (wrongItems.length > 0) {
+    btnRedoWrong.classList.remove('hidden');
+  } else {
+    btnRedoWrong.classList.add('hidden');
+  }
+
+  // Store wrong items for review
+  window._wrongItems = wrongItems;
+}
+
+function reviewWrong() {
+  const list = document.getElementById('wrong-list');
+  if (!list.classList.contains('hidden')) {
+    list.classList.add('hidden');
+    return;
+  }
+  list.classList.remove('hidden');
+  list.innerHTML = '<h3 style="margin-bottom:16px;color:#f1f5f9">错题回顾</h3>';
+  window._wrongItems.forEach(q => {
+    const isUnanswered = !answered[q.id];
+    const yourAns = isUnanswered ? '未作答' : userAnswers[q.id];
+
+    const item = document.createElement('div');
+    item.className = 'wrong-item';
+
+    // 题目
+    const qText = document.createElement('div');
+    qText.className = 'q-text';
+    qText.textContent = q.id + '. ' + q.question;
+    item.appendChild(qText);
+
+    // 选项
+    const optBox = document.createElement('div');
+    optBox.style.cssText = 'margin:10px 0;padding:8px 12px;background:rgba(15,23,42,0.4);border-radius:8px;';
+    if (q.options && q.options.length > 0) {
+      q.options.forEach(opt => {
+        const optDiv = document.createElement('div');
+        optDiv.style.cssText = 'margin:5px 0;font-size:13px;line-height:1.5;';
+        if (opt.label === q.answer) {
+          optDiv.style.color = '#86efac';
+          optDiv.style.fontWeight = '600';
+          optDiv.textContent = opt.label + '. ' + opt.text + '  ✓ 正确答案';
+        } else if (opt.label === yourAns && yourAns !== q.answer) {
+          optDiv.style.color = '#fca5a5';
+          optDiv.textContent = opt.label + '. ' + opt.text + '  ✗ 你的答案';
+        } else {
+          optDiv.style.color = '#94a3b8';
+          optDiv.textContent = opt.label + '. ' + opt.text;
+        }
+        optBox.appendChild(optDiv);
+      });
+    } else {
+      optBox.textContent = '（无选项数据）';
+      optBox.style.color = '#ef4444';
+    }
+    item.appendChild(optBox);
+
+    // 答案对比
+    const ansRow = document.createElement('div');
+    ansRow.className = 'answer-row';
+    ansRow.innerHTML = '<span class="your-ans">你的答案：' + yourAns + '</span><span style="margin:0 8px">|</span><span class="right-ans">正确答案：' + q.answer + '</span>';
+    item.appendChild(ansRow);
+
+    list.appendChild(item);
+  });
+}
+
+function goHome() {
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('result').classList.add('hidden');
+  document.getElementById('qty-panel').classList.add('hidden');
+  document.querySelectorAll('.qty-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('home').classList.remove('hidden');
+}
+
+function restartQuiz() {
+  if (mode === 'wrong') {
+    // 错题重答模式下，再做一次即重新做这批错题
+    redoWrong();
+  } else {
+    startQuiz(mode);
+  }
+}
+
+// 继续随机刷题：用相同题量再随机抽一批新题
+function continueRandom() {
+  startQuiz('random');
+}
+
+// 错题重答：只重新做之前做错的题
+function redoWrong() {
+  const wrongItems = window._wrongItems || [];
+  if (wrongItems.length === 0) return;
+  // 随机打乱错题顺序
+  currentQuestions = shuffle(wrongItems);
+  mode = 'wrong';
+  currentIndex = 0;
+  userAnswers = {};
+  answered = {};
+  document.getElementById('result').classList.add('hidden');
+  document.getElementById('wrong-list').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  document.getElementById('mode-label').textContent = `错题重答（${currentQuestions.length}题）`;
+  renderQuestion();
+}
+</script>
+</body>
+</html>
