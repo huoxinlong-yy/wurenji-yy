@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>河北中考数学模拟卷</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  min-height: 100vh; color: #e2e8f0;
+}
+.header {
+  background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 16px 24px; text-align: center; position: sticky; top: 0; z-index: 10;
+}
+.header h1 {
+  font-size: 22px; background: linear-gradient(90deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header p { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+.container { max-width: 720px; margin: 0 auto; padding: 20px 16px; }
+.score-bar {
+  position: sticky; top: 64px; z-index: 9;
+  background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px; padding: 12px 16px; margin-bottom: 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  backdrop-filter: blur(10px);
+}
+.score-bar .info { font-size: 14px; }
+.score-bar .info strong { color: #60a5fa; font-size: 18px; }
+.section-title {
+  font-size: 18px; color: #f1f5f9; margin: 24px 0 12px;
+  padding: 8px 14px; background: rgba(59, 130, 246, 0.15);
+  border-left: 4px solid #3b82f6; border-radius: 6px;
+}
+.section-title .meta { font-size: 13px; color: #94a3b8; margin-left: 8px; }
+.q-card {
+  background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(51, 65, 85, 0.8);
+  border-radius: 12px; padding: 16px; margin-bottom: 12px;
+}
+.q-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px; font-size: 13px; color: #94a3b8;
+}
+.q-num { font-weight: 600; color: #f1f5f9; font-size: 15px; }
+.q-score {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  color: #fff; padding: 2px 10px; border-radius: 10px; font-weight: 600;
+}
+.q-text { font-size: 15px; line-height: 1.7; color: #f1f5f9; margin-bottom: 12px; }
+.options { margin-top: 8px; }
+.option {
+  display: block; width: 100%;
+  background: rgba(51, 65, 85, 0.5); border: 1px solid rgba(71, 85, 105, 0.6);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 8px;
+  cursor: pointer; transition: all 0.2s; text-align: left;
+  color: #e2e8f0; font-size: 14px; line-height: 1.5;
+}
+.option:hover { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+.option.selected {
+  border-color: #3b82f6; background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+.option.correct {
+  border-color: #22c55e !important; background: rgba(34, 197, 94, 0.15) !important;
+  color: #86efac !important;
+}
+.option.wrong {
+  border-color: #ef4444 !important; background: rgba(239, 68, 68, 0.15) !important;
+  color: #fca5a5 !important;
+}
+.option .label {
+  display: inline-block; width: 24px; height: 24px;
+  line-height: 24px; text-align: center; border-radius: 50%;
+  background: rgba(71, 85, 105, 0.6); margin-right: 8px;
+  font-weight: 600; font-size: 13px; flex-shrink: 0;
+}
+.option.selected .label { background: #3b82f6; color: #fff; }
+.option.correct .label { background: #22c55e; color: #fff; }
+.option.wrong .label { background: #ef4444; color: #fff; }
+.answer-input {
+  width: 100%; background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.6); border-radius: 8px;
+  padding: 10px 14px; color: #f1f5f9; font-size: 14px; margin-top: 8px;
+  font-family: inherit;
+}
+.answer-input:focus { outline: none; border-color: #3b82f6; }
+.answer-input.correct {
+  border-color: #22c55e; background: rgba(34, 197, 94, 0.08); color: #86efac;
+}
+.answer-input.wrong {
+  border-color: #ef4444; background: rgba(239, 68, 68, 0.08); color: #fca5a5;
+}
+.feedback {
+  margin-top: 8px; padding: 8px 12px; border-radius: 8px;
+  font-size: 13px; line-height: 1.5;
+}
+.feedback.correct { background: rgba(34, 197, 94, 0.08); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.2); }
+.feedback.wrong { background: rgba(239, 68, 68, 0.08); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); }
+.btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 24px; }
+.btn {
+  padding: 12px 28px; border-radius: 10px; border: none;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; color: #fff;
+}
+.btn-primary { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4); }
+.btn-secondary { background: rgba(51, 65, 85, 0.8); border: 1px solid rgba(71, 85, 105, 0.6); }
+.result-card {
+  background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 16px; padding: 24px; text-align: center; margin: 20px 0;
+}
+.result-card .big-score { font-size: 56px; font-weight: 700; color: #60a5fa; }
+.result-card .score-info { color: #94a3b8; margin: 8px 0; }
+.hidden { display: none; }
+/* Math style */
+.math { font-family: "Cambria Math", "Times New Roman", serif; font-style: italic; }
+@media (max-width: 600px) {
+  .header { padding: 10px 12px; }
+  .header h1 { font-size: 17px; }
+  .header p { font-size: 11px; }
+  .container { padding: 12px 10px; }
+  .score-bar { top: 56px; padding: 10px 12px; }
+  .score-bar .info { font-size: 12px; }
+  .score-bar .info strong { font-size: 16px; }
+  .section-title { font-size: 15px; padding: 6px 12px; }
+  .q-card { padding: 12px; }
+  .q-text { font-size: 14px; }
+  .option { padding: 9px 12px; font-size: 13px; }
+  .option .label { width: 22px; height: 22px; line-height: 22px; font-size: 12px; }
+  .answer-input { font-size: 13px; padding: 9px 12px; }
+  .btn { padding: 10px 20px; font-size: 14px; }
+  .result-card { padding: 18px; }
+  .result-card .big-score { font-size: 42px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>河北中考数学模拟卷</h1>
+  <p>满分120分 · 共24题 · 1-12选择 13-16填空 17-24解答</p>
+</div>
+
+<div class="container">
+  <div class="score-bar">
+    <div class="info">已作答：<strong id="answeredCount">0</strong> / 24</div>
+    <div class="info">当前得分：<strong id="currentScore">0</strong> / 120</div>
+  </div>
+
+  <!-- 选择题 1-12 -->
+  <div class="section-title">一、选择题 <span class="meta">（每题3分，共36分）</span></div>
+  <div id="selectArea"></div>
+
+  <!-- 填空题 13-16 -->
+  <div class="section-title">二、填空题 <span class="meta">（每题3分，共12分）</span></div>
+  <div id="fillArea"></div>
+
+  <!-- 解答题 17-24 -->
+  <div class="section-title">三、解答题 <span class="meta">（共72分）</span></div>
+  <div id="solveArea"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="submitAll()">提交试卷</button>
+  </div>
+
+  <div id="resultBox"></div>
+</div>
+
+<script>
+const questions = [
+  // 选择题 1-12
+  { id: 1, type: 'select', score: 3, text: '化简 <span class="math">(1+1/(a-1)) ÷ a²/(a²-1)</span> 的结果是',
+    options: [{label:'A',text:'a+1'},{label:'B',text:'(a+1)/a'},{label:'C',text:'(a-1)/a'},{label:'D',text:'(a+1)/a²'}], answer: 'B' },
+  { id: 2, type: 'select', score: 3, text: '下列各式中，与分式 <span class="math">(x-y)/(x+y)</span> 相等的是',
+    options: [{label:'A',text:'((x-y)+5)/((x+y)+5)'},{label:'B',text:'(2x-y)/(2x+y)'},{label:'C',text:'(x-y)²/(x²-y²) (x≠±y)'},{label:'D',text:'(x²-y²)/(x²+y²)'}], answer: 'C' },
+  { id: 3, type: 'select', score: 3, text: '下列不等式组中，是一元一次不等式组的是',
+    options: [{label:'A',text:'{x<2, x>-2}'},{label:'B',text:'{x+1<0, y-2>0}'},{label:'C',text:'{3x-2<2, (x-2)(x+3)<0}'},{label:'D',text:'{3x-2<2, x+1<1/x}'}], answer: 'A' },
+  { id: 4, type: 'select', score: 3, text: '若点 <span class="math">P(2m-1, 3)</span> 在第二象限，则 m 的取值范围是',
+    options: [{label:'A',text:'m>1/2'},{label:'B',text:'m≤1/2'},{label:'C',text:'m<1/2'},{label:'D',text:'m≥1/2'}], answer: 'A' },
+  { id: 5, type: 'select', score: 3, text: '已知 <span class="math">m²+n²=25, mn=12</span>，则 <span class="math">m³n-mn³</span> 的值为',
+    options: [{label:'A',text:'±300'},{label:'B',text:'±84'},{label:'C',text:'±48'},{label:'D',text:'±12'}], answer: 'B' },
+  { id: 6, type: 'select', score: 3, text: '分式方程 <span class="math">3/(2x) = 1/(x-1)</span> 的解为',
+    options: [{label:'A',text:'x=1'},{label:'B',text:'x=2'},{label:'C',text:'x=4'},{label:'D',text:'x=3'}], answer: 'D' },
+  { id: 7, type: 'select', score: 3, text: '国家倡导"厉行节约、反对浪费"。某国货品牌原来每盒 p 元，现每盒降价 2 元，则同样用 500 元购买该品牌月饼现在比原来可以多买的盒数为',
+    options: [{label:'A',text:'1000/(p(p-2))'},{label:'B',text:'1000/(p(p+2))'},{label:'C',text:'500/(p(p-2))'},{label:'D',text:'-1000/(p(p-2))'}], answer: 'A' },
+  { id: 8, type: 'select', score: 3, text: '能判定四边形 ABCD 为平行四边形的条件是',
+    options: [{label:'A',text:'AB∥CD, AD=BC'},{label:'B',text:'∠A=∠B, ∠C=∠D'},{label:'C',text:'AB∥CD, ∠C=∠A'},{label:'D',text:'AB=AD, CB=CD'}], answer: 'C' },
+  { id: 9, type: 'select', score: 3, text: '已知 <span class="math">a+b=1, ab=-6</span>，则 <span class="math">a²b+ab²</span> 的值为',
+    options: [{label:'A',text:'-3'},{label:'B',text:'-5'},{label:'C',text:'-6'},{label:'D',text:'-7'}], answer: 'C' },
+  { id: 10, type: 'select', score: 3, text: '若 a 是一个负整数，则 a, -a, 1/a 三者大小关系是',
+    options: [{label:'A',text:'a ≥ 1/a > -a'},{label:'B',text:'a ≤ 1/a < -a'},{label:'C',text:'1/a ≥ a > -a'},{label:'D',text:'1/a ≤ a < -a'}], answer: 'A' },
+  { id: 11, type: 'select', score: 3, text: '中秋节月饼图案中，下列图案是中心对称图形的是',
+    options: [{label:'A',text:'图案A'},{label:'B',text:'图案B'},{label:'C',text:'图案C'},{label:'D',text:'图案D'}], answer: 'B' },
+  { id: 12, type: 'select', score: 3, text: '式子 <span class="math">(x+1)/(x+2) ÷ (x-2)/(2x+3)</span> 有意义，x 满足的条件是',
+    options: [{label:'A',text:'x≠-2 且 x≠-3/2'},{label:'B',text:'x≠-2 且 x≠2/3'},{label:'C',text:'x≠2 且 x≠-3/2'},{label:'D',text:'以上都不对'}], answer: 'C' },
+
+  // 填空题 13-16
+  { id: 13, type: 'fill', score: 3, text: '若关于 x 的不等式组 <span class="math">{2x+1>x+a, x/2+1≥(5/2)x-9}</span> 所有整数解的和为 14，则整数 a 的值为 ______', answer: '1' },
+  { id: 14, type: 'fill', score: 3, text: '不等式组 <span class="math">{2x+a>x+2, x+3≥2x-1}</span> 无解，则 a 的取值范围是 ______', answer: 'a≤-1' },
+  { id: 15, type: 'fill', score: 3, text: '不等式组 <span class="math">{2x-1>7, -x+7>1}</span> 的整数解为 ______', answer: 'x=-2' },
+  { id: 16, type: 'fill', score: 3, text: '若 <span class="math">|a+1|+(b-2)²=0</span>，则 a+b=______', answer: '1' },
+
+  // 解答题 17-24
+  { id: 17, type: 'solve', score: 8, text: '解不等式组 <span class="math">{2(x-1)-x≥-3, (1+2x)/3 ≥ x-1}</span>，并求出它所有整数解的和', answer: '2' },
+  { id: 18, type: 'solve', score: 8, text: '先化简，再求值：<span class="math">(9-a²)/(a²+4a+4) ÷ (3-a)/(a+2) · 1/(a+3)</span>，其中 <span class="math">a=√5-2</span>', answer: '1' },
+  { id: 19, type: 'solve', score: 9, text: '因式分解，再求值：<span class="math">15x²(y+4)-30x(y+4)</span>，其中 <span class="math">x=2, y=-2</span>', answer: '0' },
+  { id: 20, type: 'solve', score: 9, text: '比较大小：（1）a 与 a+2；（2）2 与 2+a', answer: '见解析' },
+  { id: 21, type: 'solve', score: 9, text: '如图，在 △ABC 中，D 是 AB 上一点，AD=AC，AE⊥CD，垂足为 E，点 F 是 BC 的中点，若 BD=10，求 EF 的长', answer: '5' },
+  { id: 22, type: 'solve', score: 9, text: '在 △ABC 中，∠C=90°，AD 平分 ∠CAB，CD=3，求点 D 到 AB 的距离', answer: '3' },
+  { id: 23, type: 'solve', score: 10, text: '某市居民生活用水实行阶梯水价。已知 8m³ 及以下每立方米水费 1 元；超过 8m³ 时，超出部分每立方米加收 0.5 元。（1）求水费 y（元）与用水量 x（m³）的函数解析式；（2）若某户用水不超过 20 元，求该户最多用水量', answer: '16' },
+  { id: 24, type: 'solve', score: 10, text: '综合探究：<span class="math">((2x²+2x)/(x²-1))-((x²-x)/(x²-2x+1))÷(x+1)</span>（含分式化简与求值）', answer: '1' }
+];
+
+const userAnswers = {};
+let submitted = false;
+
+function render() {
+  const selectArea = document.getElementById('selectArea');
+  const fillArea = document.getElementById('fillArea');
+  const solveArea = document.getElementById('solveArea');
+  selectArea.innerHTML = '';
+  fillArea.innerHTML = '';
+  solveArea.innerHTML = '';
+
+  questions.forEach(q => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = 'q' + q.id;
+
+    const header = document.createElement('div');
+    header.className = 'q-header';
+    header.innerHTML = '<span class="q-num">第 ' + q.id + ' 题</span><span class="q-score">' + q.score + ' 分</span>';
+    card.appendChild(header);
+
+    const text = document.createElement('div');
+    text.className = 'q-text';
+    text.innerHTML = q.text;
+    card.appendChild(text);
+
+    if (q.type === 'select') {
+      const opts = document.createElement('div');
+      opts.className = 'options';
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option';
+        btn.innerHTML = '<span class="label">' + opt.label + '</span>' + opt.text;
+        btn.onclick = () => selectOption(q.id, opt.label, btn);
+        opts.appendChild(btn);
+      });
+      card.appendChild(opts);
+    } else if (q.type === 'fill') {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'answer-input';
+      input.placeholder = '请输入答案';
+      input.id = 'input' + q.id;
+      input.oninput = () => { userAnswers[q.id] = input.value; updateScore(); };
+      card.appendChild(input);
+    } else if (q.type === 'solve') {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'answer-input';
+      input.placeholder = '请输入答案（证明题填关键结论）';
+      input.id = 'input' + q.id;
+      input.oninput = () => { userAnswers[q.id] = input.value; updateScore(); };
+      card.appendChild(input);
+    }
+
+    const fb = document.createElement('div');
+    fb.className = 'feedback hidden';
+    fb.id = 'fb' + q.id;
+    card.appendChild(fb);
+
+    if (q.id <= 12) selectArea.appendChild(card);
+    else if (q.id <= 16) fillArea.appendChild(card);
+    else solveArea.appendChild(card);
+  });
+}
+
+function selectOption(qId, label, btn) {
+  if (submitted) return;
+  userAnswers[qId] = label;
+  const card = btn.closest('.q-card');
+  card.querySelectorAll('.option').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  updateScore();
+}
+
+function updateScore() {
+  const answered = Object.keys(userAnswers).filter(k => userAnswers[k] && userAnswers[k].toString().trim() !== '').length;
+  document.getElementById('answeredCount').textContent = answered;
+}
+
+function submitAll() {
+  if (submitted) return;
+  submitted = true;
+  let totalScore = 0;
+  let correctCount = 0;
+
+  questions.forEach(q => {
+    const ua = (userAnswers[q.id] || '').toString().trim();
+    const fb = document.getElementById('fb' + q.id);
+    const isAnswered = ua !== '';
+    let isCorrect = false;
+
+    if (q.type === 'select') {
+      const card = document.getElementById('q' + q.id);
+      const selBtn = card.querySelector('.option.selected');
+      if (selBtn) {
+        const selLabel = selBtn.querySelector('.label').textContent;
+        if (selLabel === q.answer) {
+          selBtn.classList.add('correct');
+          isCorrect = true;
+        } else {
+          selBtn.classList.add('wrong');
+          card.querySelectorAll('.option').forEach(b => {
+            if (b.querySelector('.label').textContent === q.answer) b.classList.add('correct');
+          });
+        }
+      }
+    } else {
+      const input = document.getElementById('input' + q.id);
+      if (input) {
+        input.disabled = true;
+        if (isAnswered && ua === q.answer) {
+          input.classList.add('correct');
+          isCorrect = true;
+        } else if (isAnswered) {
+          input.classList.add('wrong');
+        }
+      }
+    }
+
+    if (isCorrect) {
+      totalScore += q.score;
+      correctCount++;
+      fb.className = 'feedback correct';
+      fb.textContent = '✓ 正确 +' + q.score + '分';
+    } else {
+      fb.className = 'feedback wrong';
+      fb.textContent = '✗ 错误 正确答案：' + q.answer;
+    }
+    fb.classList.remove('hidden');
+  });
+
+  // 显示结果
+  document.querySelector('.btn-row').classList.add('hidden');
+  const resultBox = document.getElementById('resultBox');
+  const rate = Math.round((totalScore / 120) * 100);
+  resultBox.innerHTML = '<div class="result-card">' +
+    '<div style="color:#94a3b8;font-size:14px;">本次成绩</div>' +
+    '<div class="big-score">' + totalScore + '</div>' +
+    '<div class="score-info">满分 120 分 · 答对 ' + correctCount + ' / 24 题</div>' +
+    '<div class="score-info">得分率 ' + rate + '%</div>' +
+    '<div class="btn-row" style="margin-top:20px;">' +
+    '<button class="btn btn-secondary" onclick="location.reload()">重新作答</button>' +
+    '</div></div>';
+  document.getElementById('currentScore').textContent = totalScore;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+render();
+</script>
+</body>
+</html>
