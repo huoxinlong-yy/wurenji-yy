@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>无人机驾驶员理论刷题</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  min-height: 100vh; color: #e2e8f0;
+}
+.header {
+  background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 16px 24px; text-align: center; position: sticky; top: 0; z-index: 10;
+}
+.header h1 {
+  font-size: 22px; background: linear-gradient(90deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header p { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+.container { max-width: 720px; margin: 0 auto; padding: 20px 16px; }
+
+/* Home page */
+.home { text-align: center; padding: 40px 20px; }
+.home h2 { font-size: 24px; margin-bottom: 16px; color: #f1f5f9; }
+.home .stats { color: #94a3b8; margin-bottom: 32px; font-size: 15px; }
+.mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.mode-card {
+  background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 16px; padding: 28px 20px; cursor: pointer; transition: all 0.3s;
+  text-align: center;
+}
+.mode-card:hover { transform: translateY(-4px); border-color: #3b82f6; box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3); }
+.mode-card .icon { font-size: 40px; margin-bottom: 12px; }
+.mode-card h3 { font-size: 18px; color: #f1f5f9; margin-bottom: 6px; }
+.mode-card p { font-size: 13px; color: #94a3b8; }
+.mode-card .count { display: inline-block; margin-top: 10px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 12px; border-radius: 12px; font-size: 12px; }
+
+/* Mode selector */
+.type-selector { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; }
+.type-btn {
+  padding: 10px 20px; border-radius: 10px; border: 1px solid rgba(71, 85, 105, 0.6);
+  background: rgba(51, 65, 85, 0.5); color: #e2e8f0; cursor: pointer; font-size: 14px;
+  transition: all 0.2s;
+}
+.type-btn.active { background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-color: transparent; }
+
+/* Count selector */
+.count-selector { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+.count-btn {
+  padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(71, 85, 105, 0.6);
+  background: rgba(51, 65, 85, 0.5); color: #e2e8f0; cursor: pointer; font-size: 13px;
+  transition: all 0.2s;
+}
+.count-btn.active { background: linear-gradient(90deg, #3b82f6, #8b5cf6); border-color: transparent; }
+
+/* Quiz page */
+.score-bar {
+  position: sticky; top: 64px; z-index: 9;
+  background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px; padding: 12px 16px; margin-bottom: 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  backdrop-filter: blur(10px);
+}
+.score-bar .info { font-size: 14px; }
+.score-bar .info strong { color: #60a5fa; font-size: 18px; }
+.q-card {
+  background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(51, 65, 85, 0.8);
+  border-radius: 12px; padding: 16px; margin-bottom: 12px;
+}
+.q-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px; font-size: 13px; color: #94a3b8;
+}
+.q-num { font-weight: 600; color: #f1f5f9; font-size: 15px; }
+.q-type {
+  background: rgba(139, 92, 246, 0.2); color: #c4b5fd;
+  padding: 2px 10px; border-radius: 10px; font-size: 12px;
+}
+.q-text { font-size: 15px; line-height: 1.7; color: #f1f5f9; margin-bottom: 12px; }
+.options { margin-top: 8px; }
+.option {
+  display: block; width: 100%;
+  background: rgba(51, 65, 85, 0.5); border: 1px solid rgba(71, 85, 105, 0.6);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 8px;
+  cursor: pointer; transition: all 0.2s; text-align: left;
+  color: #e2e8f0; font-size: 14px; line-height: 1.5;
+}
+.option:hover { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+.option.selected { border-color: #3b82f6; background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+.option.correct { border-color: #22c55e !important; background: rgba(34, 197, 94, 0.15) !important; color: #86efac !important; }
+.option.wrong { border-color: #ef4444 !important; background: rgba(239, 68, 68, 0.15) !important; color: #fca5a5 !important; }
+.option .label {
+  display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center;
+  border-radius: 50%; background: rgba(71, 85, 105, 0.6); margin-right: 8px;
+  font-weight: 600; font-size: 13px;
+}
+.option.selected .label { background: #3b82f6; color: #fff; }
+.option.correct .label { background: #22c55e; color: #fff; }
+.option.wrong .label { background: #ef4444; color: #fff; }
+.tf-options { display: flex; gap: 12px; }
+.tf-btn {
+  flex: 1; padding: 14px; border-radius: 10px; border: 1px solid rgba(71, 85, 105, 0.6);
+  background: rgba(51, 65, 85, 0.5); color: #e2e8f0; cursor: pointer; font-size: 16px;
+  transition: all 0.2s; text-align: center;
+}
+.tf-btn:hover { border-color: #3b82f6; }
+.tf-btn.selected { background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #93c5fd; }
+.tf-btn.correct { background: rgba(34, 197, 94, 0.15); border-color: #22c55e; color: #86efac; }
+.tf-btn.wrong { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #fca5a5; }
+.feedback {
+  margin-top: 8px; padding: 8px 12px; border-radius: 8px; font-size: 13px; line-height: 1.5;
+}
+.feedback.correct { background: rgba(34, 197, 94, 0.08); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.2); }
+.feedback.wrong { background: rgba(239, 68, 68, 0.08); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); }
+.btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+.btn {
+  padding: 12px 28px; border-radius: 10px; border: none; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; color: #fff;
+}
+.btn-primary { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4); }
+.btn-secondary { background: rgba(51, 65, 85, 0.8); border: 1px solid rgba(71, 85, 105, 0.6); }
+.btn-warn { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+.result-card {
+  background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 16px; padding: 24px; text-align: center; margin: 20px 0;
+}
+.result-card .big-score { font-size: 56px; font-weight: 700; color: #60a5fa; }
+.result-card .score-info { color: #94a3b8; margin: 8px 0; }
+.result-card .ring { width: 140px; height: 140px; margin: 16px auto; }
+.wrong-list { text-align: left; margin-top: 16px; }
+.wrong-item {
+  background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px; padding: 12px; margin-bottom: 10px;
+}
+.wrong-item .q-text { font-size: 14px; margin-bottom: 6px; }
+.wrong-item .correct-ans { color: #86efac; font-size: 13px; }
+.wrong-item .your-ans { color: #fca5a5; font-size: 13px; }
+.hidden { display: none; }
+.back-btn {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  background: rgba(51, 65, 85, 0.8); border: 1px solid rgba(71, 85, 105, 0.6);
+  color: #e2e8f0; padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
+}
+@media (max-width: 600px) {
+  .header { padding: 10px 12px; }
+  .header h1 { font-size: 17px; }
+  .header p { font-size: 11px; }
+  .container { padding: 12px 10px; }
+  .home { padding: 20px 12px; }
+  .home h2 { font-size: 20px; }
+  .mode-cards { grid-template-columns: 1fr; }
+  .score-bar { top: 56px; padding: 10px 12px; }
+  .score-bar .info { font-size: 12px; }
+  .score-bar .info strong { font-size: 16px; }
+  .q-card { padding: 12px; }
+  .q-text { font-size: 14px; }
+  .option { padding: 9px 12px; font-size: 13px; }
+  .option .label { width: 22px; height: 22px; line-height: 22px; font-size: 12px; }
+  .tf-btn { font-size: 14px; padding: 12px; }
+  .btn { padding: 10px 20px; font-size: 14px; }
+  .result-card { padding: 18px; }
+  .result-card .big-score { font-size: 42px; }
+  .result-card .ring { width: 120px; height: 120px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <button class="back-btn hidden" id="backBtn" onclick="goHome()">← 返回首页</button>
+  <h1>无人机驾驶员理论刷题</h1>
+  <p id="headerSub">共 221 道选择题 + 54 道判断题</p>
+</div>
+<div class="container" id="mainContainer"></div>
+
+<script>
+const choiceData = [{"id": 1, "text": "飞机起飞时后缘襟翼放下的角度小于着陆时放下的角度是因为", "options": [{"label": "A", "text": "后缘襟翼放下角度比较小时，机翼的升力系数增加，阻力系数不增加"}, {"label": "B", "text": "后缘襟翼放下角度比较大时，机翼的阻力系数增加，升力系数不增加"}, {"label": "C", "text": "后缘襟翼放下角度比较小时，机翼的升力系数增加的效果大于阻力系数增加的效果"}, {"label": "D", "text": "起飞时需要更大的阻力来缩短滑跑距离"}], "answer": "C"}, {"id": 2, "text": "在卫星云图上，可见光云图的色调取决于", "options": [{"label": "A", "text": "目标反射太阳辐射的大小"}, {"label": "B", "text": "目标的温度"}, {"label": "C", "text": "目标的高低"}, {"label": "D", "text": "目标的气压"}], "answer": "A"}, {"id": 3, "text": "气体的伯努利定理是哪个定律在空气流动过程中的应用", "options": [{"label": "A", "text": "能量守衡定律"}, {"label": "B", "text": "牛顿第一定律"}, {"label": "C", "text": "质量守衡定律"}, {"label": "D", "text": "牛顿第三定律"}], "answer": "A"}, {"id": 4, "text": "流体在管道中稳定低速流动时，如果管道由粗变细，则流体的流速", "options": [{"label": "A", "text": "增大"}, {"label": "B", "text": "减小"}, {"label": "C", "text": "保持不变"}, {"label": "D", "text": "先增大后减小"}], "answer": "A"}, {"id": 5, "text": "亚音速气流流过收缩管道，其气流参数如何变化", "options": [{"label": "A", "text": "流速增加，压强增大"}, {"label": "B", "text": "速度降低，压强下降"}, {"label": "C", "text": "流速增加，压强下降"}, {"label": "D", "text": "流速降低，压强增大"}], "answer": "C"}, {"id": 6, "text": "伯努利方程的使用条件是", "options": [{"label": "A", "text": "只要是理想的不可压缩流体"}, {"label": "B", "text": "只要是理想的与外界无能量交换的流体"}, {"label": "C", "text": "必须是理想的、不可压缩、且与外界无能量变换的流体"}, {"label": "D", "text": "适用于所有实际流体"}], "answer": "C"}, {"id": 7, "text": "对低速气流，由伯努利方程可以得出", "options": [{"label": "A", "text": "流管内气流速度增加，空气静压也增加"}, {"label": "B", "text": "流管截面积减小，空气静压增加"}, {"label": "C", "text": "流管内气流速度增加,空气静压减"}, {"label": "D", "text": "流管截面积减小，空气静压不变"}], "answer": "C"}, {"id": 8, "text": "当空气在管道中流动时，由伯努利定理可知", "options": [{"label": "A", "text": "凡是流速大的地方，压强就大"}, {"label": "B", "text": "凡是流速小的地方，压强就小"}, {"label": "C", "text": "凡是流速大的地方，压强就小"}, {"label": "D", "text": "流速与压强无关"}], "answer": "C"}, {"id": 9, "text": "关于动压和静压的方向，以下哪一个是正确的", "options": [{"label": "A", "text": "动压和静压的方向都是与运动的方向一致"}, {"label": "B", "text": "动压和静压都作用在任意方向"}, {"label": "C", "text": "动压作用在流体的流动方向，静压作用在任意方向"}, {"label": "D", "text": "动压作用在任意方向，静压作用在流动方向"}], "answer": "C"}, {"id": 10, "text": "流体的伯努利定理", "options": [{"label": "A", "text": "适用于不可压缩的理想流体"}, {"label": "B", "text": "适用于粘性的理想流体"}, {"label": "C", "text": "适用于不可压缩的粘性流体"}, {"label": "D", "text": "适用于可压缩的实际流体"}], "answer": "A"}, {"id": 11, "text": "伯努利方程适用于", "options": [{"label": "A", "text": "低速气流"}, {"label": "B", "text": "高速气流"}, {"label": "C", "text": "适用于各种速度的气流"}, {"label": "D", "text": "仅适用于超音速气流"}], "answer": "A"}, {"id": 12, "text": "离开源地移至与源地性质不同的下垫面时，气团的物理属性逐渐发生变化，这个过程称为气团的变性。一般说来", "options": [{"label": "A", "text": "冷气团移到暖的地区变性快，而暖的气团移到冷的地区变性慢"}, {"label": "B", "text": "冷气团移到暖的地区变性慢，而暖的气团移到冷的地区变性快"}, {"label": "C", "text": "暖气团移到暖的地区，冷气团移到冷的地区不变性"}, {"label": "D", "text": "气团的变性速度与下垫面温度无关"}], "answer": "A"}, {"id": 13, "text": "前缘缝翼的主要作用是", "options": [{"label": "A", "text": "放出前缘缝翼，可增大飞机的临界迎角"}, {"label": "B", "text": "增大机翼升力"}, {"label": "C", "text": "减小阻力"}, {"label": "D", "text": "增大飞机的飞行速度"}], "answer": "A"}, {"id": 14, "text": "打开后缘襟翼既能增大机翼切面的弯曲度，又能增加机翼的面积，继而提高飞机的升力系数，这种襟翼被叫做", "options": [{"label": "A", "text": "分裂式襟翼"}, {"label": "B", "text": "简单式襟翼"}, {"label": "C", "text": "后退式襟翼"}, {"label": "D", "text": "开缝式襟翼"}], "answer": "C"}, {"id": 15, "text": "属于减升装置的辅助操纵面是", "options": [{"label": "A", "text": "扰流扳"}, {"label": "B", "text": "副翼"}, {"label": "C", "text": "前缘缝翼"}, {"label": "D", "text": "后缘襟翼"}], "answer": "A"}, {"id": 16, "text": "飞机着陆时使用后缘襟翼的作用是", "options": [{"label": "A", "text": "提高飞机的操纵灵敏性"}, {"label": "B", "text": "增加飞机的稳定性"}, {"label": "C", "text": "增加飞机的升力"}, {"label": "D", "text": "减小飞机的接地速度"}], "answer": "C"}, {"id": 17, "text": "当后缘襟翼放下时，下述说法正确的是", "options": [{"label": "A", "text": "只增大升力"}, {"label": "B", "text": "只增大阻力"}, {"label": "C", "text": "既增大升力又增大阻力"}, {"label": "D", "text": "升力增大，阻力不变"}], "answer": "C"}, {"id": 18, "text": "根据国际民航组织的规定，云满天时的云量为", "options": [{"label": "A", "text": "12"}, {"label": "B", "text": "8"}, {"label": "C", "text": "10"}, {"label": "D", "text": "16"}], "answer": "B"}, {"id": 19, "text": "机场上空高度较低的云会直接影响飞机的起降。其中，危害最大的云是", "options": [{"label": "A", "text": "对流云"}, {"label": "B", "text": "卷状云"}, {"label": "C", "text": "层状云"}, {"label": "D", "text": "高层云"}], "answer": "A"}, {"id": 20, "text": "一般而言，气团的垂直高度可达几公里到十几公里，常常从地面伸展到对流层顶。水平范围为", "options": [{"label": "A", "text": "几十公里到几千公里"}, {"label": "B", "text": "几十公里到几百公里"}, {"label": "C", "text": "几公里到几百公里"}, {"label": "D", "text": "几公里到几十公里"}], "answer": "A"}, {"id": 21, "text": "气团的分类方法正确的是", "options": [{"label": "A", "text": "冷气团和干气团"}, {"label": "B", "text": "暖气团和湿气团"}, {"label": "C", "text": "北冰洋气团、极地气团，热带气团、赤道气团"}, {"label": "D", "text": "大陆气团和海洋气团仅按湿度分类"}], "answer": "C"}, {"id": 22, "text": "下面关于气团的叙述正确的是", "options": [{"label": "A", "text": "我国地域广大，能形成各种气团"}, {"label": "B", "text": "气团离开源地，其性质将会发生变化"}, {"label": "C", "text": "气团只形成于极地和大洋地区"}, {"label": "D", "text": "气团的性质在源地会持续变化"}], "answer": "B"}, {"id": 23, "text": "测量机翼的翼弦是从", "options": [{"label": "A", "text": "左翼尖到右翼尖"}, {"label": "B", "text": "机身中心线到翼尖"}, {"label": "C", "text": "机翼前缘到后缘"}, {"label": "D", "text": "机翼上表面最高点到下表面最低点"}], "answer": "C"}, {"id": 24, "text": "测量机翼的翼展是从", "options": [{"label": "A", "text": "左翼尖到右翼尖"}, {"label": "B", "text": "机身中心线到翼尖"}, {"label": "C", "text": "机翼前缘到后缘"}, {"label": "D", "text": "机翼根部前缘到翼尖后缘"}], "answer": "A"}, {"id": 25, "text": "机翼的安装角是", "options": [{"label": "A", "text": "翼弦与相对气流速度的夹角"}, {"label": "B", "text": "翼弦与机身纵轴之间所夹锐角"}, {"label": "C", "text": "翼弦与水平面之间所夹的锐角"}, {"label": "D", "text": "翼弦与翼展方向之间的夹角"}], "answer": "B"}, {"id": 26, "text": "机翼的展弦比是", "options": [{"label": "A", "text": "展长与机翼最大厚度之比"}, {"label": "B", "text": "展长与翼尖弦长之比"}, {"label": "C", "text": "展长与平均几何弦长之比"}, {"label": "D", "text": "展长与机翼根弦长之比"}], "answer": "C"}, {"id": 27, "text": "机翼1/4弦线与垂直机身中心线的直线之间的夹角称为机翼的", "options": [{"label": "A", "text": "安装角"}, {"label": "B", "text": "上反角"}, {"label": "C", "text": "后掠角"}, {"label": "D", "text": "扭转角"}], "answer": "C"}, {"id": 28, "text": "翼型的最大厚度与弦长的比值称为", "options": [{"label": "A", "text": "相对弯度"}, {"label": "B", "text": "相对厚度"}, {"label": "C", "text": "最大弯度"}, {"label": "D", "text": "展弦比"}], "answer": "B"}, {"id": 29, "text": "翼型的最大弯度与弦长的比值称为", "options": [{"label": "A", "text": "相对弯度"}, {"label": "B", "text": "相对厚度"}, {"label": "C", "text": "最大厚度"}, {"label": "D", "text": "翼型效率"}], "answer": "A"}, {"id": 30, "text": "影响翼型性能的最主要的参数是", "options": [{"label": "A", "text": "前缘和后缘"}, {"label": "B", "text": "翼型的厚度和弯度"}, {"label": "C", "text": "弯度和前缘"}, {"label": "D", "text": "机翼的展弦比和面积"}], "answer": "B"}, {"id": 31, "text": "具有后掠角的飞机有侧滑角时，会产生", "options": [{"label": "A", "text": "滚转力矩"}, {"label": "B", "text": "俯仰力矩"}, {"label": "C", "text": "不产生任何力矩"}, {"label": "D", "text": "偏航力矩"}], "answer": "A"}, {"id": 32, "text": "具有上反角的飞机有侧滑角时，会产生", "options": [{"label": "A", "text": "偏航力矩"}, {"label": "B", "text": "俯仰力矩"}, {"label": "C", "text": "不产生任何力矩"}, {"label": "D", "text": "横侧力矩为零"}], "answer": "A"}, {"id": 33, "text": "下列关于勤劳节俭的论述中，正确的选项是", "options": [{"label": "A", "text": "勤劳一定能使人致富"}, {"label": "B", "text": "勤劳节俭有利于企业持续发展"}, {"label": "C", "text": "新时代需要巧干，不需要勤劳"}, {"label": "D", "text": "新时代需要创造，不需要节俭"}], "answer": "B"}, {"id": 34, "text": "下列选项中属于企业文化功能的是", "options": [{"label": "A", "text": "整合功能"}, {"label": "A", "text": "维护企业信誉"}, {"label": "B", "text": "技术培训功能"}, {"label": "B", "text": "增加职工福利"}, {"label": "C", "text": "科学研究功"}, {"label": "C", "text": "注重经济效益"}, {"label": "D", "text": "社交功能"}, {"label": "D", "text": "开展员工培训"}], "answer": "A"}, {"id": 36, "text": "在机翼上，驻点处是", "options": [{"label": "A", "text": "空气与前缘相遇的地方"}, {"label": "B", "text": "空气与后缘相遇的地方"}, {"label": "C", "text": "都不正确"}, {"label": "D", "text": "机翼的几何中点"}], "answer": "A"}, {"id": 37, "text": "如果对称机翼相对来流仰头旋转了一个迎角，驻点", "options": [{"label": "A", "text": "稍稍向前缘的上表面移动"}, {"label": "B", "text": "稍稍向前缘的下表面移动"}, {"label": "C", "text": "不会移动"}, {"label": "D", "text": "向机翼后缘移动"}], "answer": "B"}, {"id": 38, "text": "下列正确的选项是", "options": [{"label": "A", "text": "了解飞机阻力是如何产生的并如何去减小它是很重要的"}, {"label": "B", "text": "飞行器飞行时阻力是可以避免的"}, {"label": "C", "text": "每次翼型或迎角的变化都不会改变飞机的阻力"}, {"label": "D", "text": "飞机阻力仅与飞行速度有关"}], "answer": "A"}, {"id": 39, "text": "下列错误的选项是 3A、黏性阻力是由于空气和飞行器表面接触产生的", "options": [{"label": "A", "text": "(缺失)"}, {"label": "B", "text": "形状阻力是由于空气和飞行器表面接触产生的"}, {"label": "C", "text": "蒙皮摩擦阻力是由于空气和飞行器表面接触产生的"}, {"label": "D", "text": "诱导阻力是由于空气和飞行器表面接触产生的"}], "answer": "B"}, {"id": 40, "text": "当速度增加而诱导阻力减少时", "options": [{"label": "A", "text": "形阻减少了"}, {"label": "B", "text": "蒙皮摩阻减少了"}, {"label": "C", "text": "蒙皮摩阻增加"}, {"label": "D", "text": "诱导阻力保持不变"}], "answer": "C"}, {"id": 41, "text": "飞机上升时，其迎角", "options": [{"label": "A", "text": "大于零"}, {"label": "B", "text": "小于零"}, {"label": "C", "text": "等于零"}, {"label": "D", "text": "随速度增大而减小至零"}], "answer": "A"}, {"id": 42, "text": "保持匀速飞行时，阻力与推力", "options": [{"label": "A", "text": "相等"}, {"label": "B", "text": "阻力大于推力"}, {"label": "C", "text": "阻力小于推力"}, {"label": "D", "text": "阻力与推力的关系随高度变化"}], "answer": "A"}, {"id": 43, "text": "保持匀速上升时，升力与重力", "options": [{"label": "A", "text": "相等"}, {"label": "B", "text": "升力大于重力"}, {"label": "C", "text": "升力小于重力"}, {"label": "D", "text": "升力与重力的差值等于零"}], "answer": "B"}, {"id": 44, "text": "流体的粘性与温度之间的关系是", "options": [{"label": "A", "text": "液体的粘性随温度的升高而增大"}, {"label": "B", "text": "气体的粘性随温度的升高而增大"}, {"label": "C", "text": "液体的粘性与温度无关"}, {"label": "D", "text": "气体的粘性随温度升高而减小"}], "answer": "B"}, {"id": 45, "text": "空气动力学概念中，空气的物理性质主要包括", "options": [{"label": "A", "text": "空气的粘性"}, {"label": "A", "text": "克服利益导向"}, {"label": "B", "text": "空气的压缩性"}, {"label": "B", "text": "遏制牟利最大化"}, {"label": "C", "text": "空气的粘性和压缩性"}, {"label": "C", "text": "增强决策科学化"}, {"label": "D", "text": "空气的颜色和气味"}, {"label": "D", "text": "促进员工行为的规范化"}], "answer": "C"}, {"id": 47, "text": "道德是一种社会意识形态，是人们共同生活极其行为的", "options": [{"label": "A", "text": "准则和规范"}, {"label": "B", "text": "标准"}, {"label": "C", "text": "准则"}, {"label": "D", "text": "约束"}], "answer": "A"}, {"id": 48, "text": "职业道德的基本要求是", "options": [{"label": "A", "text": "爱岗敬业，诚实守信"}, {"label": "A", "text": "企业可提倡勤劳，但不宜提倡节俭"}, {"label": "A", "text": "互利互惠，平均分配"}, {"label": "B", "text": "办事公道、服务群众"}, {"label": "B", "text": "“一分钟应看成是八分钟”"}, {"label": "B", "text": "加强交流，平等对话"}, {"label": "C", "text": "奉献社会"}, {"label": "C", "text": "勤劳节俭符合可持续发展的要求"}, {"label": "C", "text": "只要合作，不要竞争"}, {"label": "D", "text": "以上都是"}, {"label": "D", "text": "“节省一块钱，就等于净赚一块钱”"}, {"label": "D", "text": "人心叵测，谨慎行事"}], "answer": "A"}, {"id": 51, "text": "目前主流的民用无人机所采用的动力系统通常为活塞式发动机和", "options": [{"label": "A", "text": "火箭发动机"}, {"label": "B", "text": "涡扇发动机"}, {"label": "C", "text": "电动机"}, {"label": "D", "text": "转子发动机"}], "answer": "C"}, {"id": 52, "text": "活塞发动机系统常采用的增压技术主要是用来", "options": [{"label": "A", "text": "提高功率"}, {"label": "B", "text": "减少废气量"}, {"label": "C", "text": "增加转速"}, {"label": "D", "text": "增加动力"}], "answer": "A"}, {"id": 53, "text": "电动动力系统主要由动力电机动力电源和", "options": [{"label": "A", "text": "电池"}, {"label": "B", "text": "调速系统"}, {"label": "C", "text": "无刷电机"}, {"label": "D", "text": "动力电"}], "answer": "B"}, {"id": 54, "text": "影响空气粘性力的主要因素是", "options": [{"label": "A", "text": "空气清洁度"}, {"label": "B", "text": "空气温度"}, {"label": "C", "text": "相对湿度"}, {"label": "D", "text": "空气的海拔高度"}], "answer": "B"}, {"id": 55, "text": "对于空气密度如下说法正确的是", "options": [{"label": "A", "text": "空气密度正比于压力和绝对温度"}, {"label": "B", "text": "空气密度正比于压力，反比于绝对温度"}, {"label": "C", "text": "空气密度反比于压力，正比于绝对温度"}, {"label": "D", "text": "空气密度与压力和绝对温度均无关"}], "answer": "B"}, {"id": 56, "text": "假设其他条件不变，空气湿度大", "options": [{"label": "A", "text": "空气密度大，起飞滑跑距离长"}, {"label": "B", "text": "空气密度小，起飞滑跑距离长"}, {"label": "C", "text": "空气密度大，起飞滑跑距离短"}, {"label": "D", "text": "空气密度不变，起飞滑跑距离缩短"}], "answer": "B"}, {"id": 57, "text": "一定体积的容器中,空气压力", "options": [{"label": "A", "text": "与空气密度和空气温度乘积成正比"}, {"label": "B", "text": "与空气密度和空气温度乘积成反比"}, {"label": "C", "text": "与空气密度和空气绝对温度乘积成正比"}, {"label": "D", "text": "与空气密度和空气绝对温度乘积成反比"}], "answer": "C"}, {"id": 58, "text": "国际标准大气的物理参数的相互关系是", "options": [{"label": "A", "text": "温度不变时,压力与体积成正比"}, {"label": "B", "text": "体积不变时，压力和温度成正比"}, {"label": "C", "text": "压力不变时，体积和温度成反比"}, {"label": "D", "text": "温度不变时，压力与体积的平方成正比"}], "answer": "B"}, {"id": 59, "text": "在涡阻力等于其他阻力和的地方", "options": [{"label": "A", "text": "阻力达到最小值"}, {"label": "B", "text": "阻力达到极小值"}, {"label": "C", "text": "阻力达到极大值"}, {"label": "D", "text": "阻力为零"}], "answer": "A"}, {"id": 60, "text": "下列", "options": [{"label": "A", "text": "低速飞行"}, {"label": "B", "text": "高速飞行"}, {"label": "C", "text": "都会"}, {"label": "D", "text": "无此飞行状态"}], "answer": "C"}, {"id": 61, "text": "常规布局飞机失速时", "options": [{"label": "A", "text": "机翼向上的力和尾翼向下的力都降低"}, {"label": "A", "text": "看效益决定是否爱岗"}, {"label": "B", "text": "机翼向上的力和尾翼向下的力都增加"}, {"label": "B", "text": "转变择业观念"}, {"label": "C", "text": "机翼向上的力和尾翼向下的力恒都为零"}, {"label": "C", "text": "提高职业技能"}, {"label": "D", "text": "机翼升力降低，尾翼升力增加"}, {"label": "D", "text": "增强把握择业的机遇意识"}], "answer": "A"}, {"id": 63, "text": "下列叙述不属于平流层的特点", "options": [{"label": "A", "text": "空气中的风向、风速不变"}, {"label": "B", "text": "温度大体不变，平均在-56、5℃"}, {"label": "C", "text": "空气上下对流激烈"}, {"label": "D", "text": "空气稀薄，水汽含量极低"}], "answer": "C"}, {"id": 64, "text": "在对流层内，空气的温度", "options": [{"label": "A", "text": "随高度增加而降低"}, {"label": "B", "text": "随高度增加而升高"}, {"label": "C", "text": "随高度增加保持不变"}, {"label": "D", "text": "随高度增加先升高后降低"}], "answer": "A"}, {"id": 65, "text": "现代民航客机一般巡航的大气层是", "options": [{"label": "A", "text": "对流层顶层、平流层底层"}, {"label": "B", "text": "平流层顶层"}, {"label": "C", "text": "对流层底层"}, {"label": "D", "text": "中间层"}], "answer": "A"}, {"id": 66, "text": "当恒定角速度水平转弯时空速增加，转弯半径", "options": [{"label": "A", "text": "不变"}, {"label": "B", "text": "减少"}, {"label": "C", "text": "增加"}, {"label": "D", "text": "先增加后减少"}], "answer": "C"}, {"id": 67, "text": "外侧滑转弯是由于离心力比升力的水平分量还大，把飞机向转弯的外侧拉。下列说法错误的是", "options": [{"label": "A", "text": "外侧滑转弯可以通过增加倾斜角修正"}, {"label": "B", "text": "为维持一个给定的角速度，倾斜角必须随离心力变化"}, {"label": "C", "text": "在高速飞机上对侧滑进行修正非常重要"}, {"label": "D", "text": "外侧滑转弯无需进行任何修正"}], "answer": "B"}, {"id": 68, "text": "下面说法错误的是", "options": [{"label": "A", "text": "滑翔状态，一个较大的下滑角会导致一个很大的重力分量"}, {"label": "B", "text": "在俯冲状态中，飞行轨迹可以达到完全垂直向下"}, {"label": "C", "text": "在爬升状态中，要想爬升得更陡和更快就必须有强大的推力，机翼的作用是主要的"}, {"label": "D", "text": "滑翔时推力减小对下滑角无任何影响"}], "answer": "C"}, {"id": 69, "text": "从应用上说，涡桨发动机适用于", "options": [{"label": "A", "text": "中低空、低速短距/垂直起降无人机"}, {"label": "B", "text": "高空长航时无人机"}, {"label": "C", "text": "中高空长航时无人机"}, {"label": "D", "text": "无人战斗机"}], "answer": "C"}, {"id": 70, "text": "属于无人机飞控子系统功能的是", "options": [{"label": "A", "text": "无人机姿态稳定与控制"}, {"label": "B", "text": "导航控制"}, {"label": "C", "text": "任务信息收集"}, {"label": "D", "text": "信息传递"}], "answer": "A"}, {"id": 71, "text": ".不属于无人机飞控子系统所需信息的是", "options": [{"label": "A", "text": "经/纬度"}, {"label": "B", "text": "姿态角"}, {"label": "C", "text": "相机拍摄参数"}, {"label": "D", "text": "空速"}], "answer": "A"}, {"id": 72, "text": "下列说法错误的是", "options": [{"label": "A", "text": "裕度越大，稳定性就越强。"}, {"label": "B", "text": "重心的移动不会改变静稳定裕度"}, {"label": "C", "text": "配重的任何变化都将需要新的升降舵配平以维持水平飞行"}, {"label": "D", "text": "静稳定裕度仅与机翼形状相关"}], "answer": "B"}, {"id": 73, "text": "无人机的发射方式可归纳为手抛发射零长发射弹射发射起落架滑跑起飞母机空中发射容器式发射装置发射和垂直起飞等类型。下列说法正确的是", "options": [{"label": "A", "text": "在地面发射时，无人机使用较为广泛的发射方式是母机空中发射与零长发射"}, {"label": "B", "text": "无人机安装在轨道式发射装置上，在压缩空气、橡筋或液压等弹射装置作用下起飞，无人机飞离发射装置后，在辅助发动机作用下完成飞行任务"}, {"label": "C", "text": "容器式发射装置是一种封闭式发射装置，兼备发射与贮存无人机功能。它有单室式和多室式两种类型"}, {"label": "D", "text": "手抛发射仅适用于重型无人机"}], "answer": "C"}, {"id": 74, "text": "无人机的回收方式可归纳为伞降回收空中回收起落架轮式着陆拦阻网回收气垫着陆和垂直着陆等类型。下列说法错误的是", "options": [{"label": "A", "text": "空中回收，在大飞机上必须有空中回收系统，在无人机上除了有阻力伞和主伞之外，还需有钩挂伞、吊索和可旋转的脱落机构"}, {"label": "B", "text": "起落架轮式着陆，多数无人机的起落架局部被设计成较坚固，局部较脆弱"}, {"label": "C", "text": "用拦截网系统回收无人机是目前世界小型无人机采用的回收方之一"}, {"label": "D", "text": "气垫着陆适用于所有类型的无人机"}], "answer": "B"}, {"id": 75, "text": "关于伞降回收以下正确的是", "options": [{"label": "A", "text": "回收伞均由主伞、减速伞和阻力伞三级伞组成"}, {"label": "B", "text": "当无人机完成任务后，地面站发遥控指令给无人机或由无人机自主执行，使无人机减速，降高及发动机停车"}, {"label": "C", "text": "无人机悬挂在主伞下慢慢着陆，机下触地开关接通，使主伞收回无人机内，这是对降落伞回收过程最简单的描述"}, {"label": "D", "text": "伞降回收时无人机发动机需全程保持高功率运转"}], "answer": "B"}, {"id": 76, "text": "超音速气流经过收缩管道后", "options": [{"label": "A", "text": "速度增加，压强增大"}, {"label": "B", "text": "速度增加，压强下降"}, {"label": "C", "text": "速度降低，压强增大"}, {"label": "D", "text": "速度降低，压强减小"}], "answer": "C"}, {"id": 77, "text": "飞机飞行中，空气表现出来的可压缩程度", "options": [{"label": "A", "text": "只取决于飞机的飞行速度(空速)"}, {"label": "B", "text": "只取决于飞机飞行当地的音速"}, {"label": "C", "text": "和飞机飞行的速度(空速)以及当地的音速有关"}, {"label": "D", "text": "与飞机的飞行高度成反比"}], "answer": "C"}, {"id": 78, "text": "飞机在对流层中匀速爬升时，随着飞行高度的增加,飞机飞行马赫数", "options": [{"label": "A", "text": "保持不变"}, {"label": "B", "text": "逐渐增加"}, {"label": "C", "text": "逐渐减小"}, {"label": "D", "text": "先增加后减小"}], "answer": "B"}, {"id": 79, "text": "关于飞机失速下列说法正确的是", "options": [{"label": "A", "text": "飞机失速是通过加大发动机动力就可以克服的飞行障碍"}, {"label": "B", "text": "亚音速飞行只会出现大迎角失速"}, {"label": "C", "text": "在大迎角或高速飞行状态下都可能出现飞机失速现象"}, {"label": "D", "text": "超音速飞行不会出现失速现象"}], "answer": "C"}, {"id": 80, "text": "飞机在飞行中出现的失速现象的原因是", "options": [{"label": "A", "text": "翼梢出现较强的旋涡，产生很大的诱导阻力"}, {"label": "B", "text": "由于迎角达到临界迎角，造成机翼上表面附面层大部分分离"}, {"label": "C", "text": "由于机翼表面粗糙，使附面层由层流变为紊流"}, {"label": "D", "text": "飞机的飞行速度过低"}], "answer": "B"}, {"id": 81, "text": "无人机在飞行过程中，若遇到突发大风，正确的操作是", "options": [{"label": "A", "text": "继续按原航线飞行"}, {"label": "B", "text": "立即加速脱离风区"}, {"label": "C", "text": "降低高度，缓慢返航"}, {"label": "D", "text": "直接悬停等待风停"}], "answer": "C"}, {"id": 82, "text": "以下哪种天气现象会对无人机飞行安全造成严重威胁，应避免", "options": [{"label": "A", "text": "晴天微风"}, {"label": "B", "text": "阴天无雨"}, {"label": "C", "text": "雷暴"}, {"label": "D", "text": "多云"}], "answer": "C"}, {"id": 83, "text": "无人机遥控器“油门杆”的主要作用是控制无人机的", "options": [{"label": "A", "text": "左右平移"}, {"label": "B", "text": "升降"}, {"label": "C", "text": "前后飞行"}, {"label": "D", "text": "旋转"}], "answer": "B"}, {"id": 84, "text": "民用无人机驾驶员需遵守的基本准则是", "options": [{"label": "A", "text": "可在人群密集区域飞行"}, {"label": "B", "text": "飞行前无需申报空域"}, {"label": "C", "text": "避免影响公共安全和他人权益"}, {"label": "D", "text": "夜间飞行无需额外照明"}], "answer": "C"}, {"id": 85, "text": "无人机飞行中，若图传信号突然中断，首先应", "options": [{"label": "A", "text": "关闭遥控器"}, {"label": "B", "text": "启动返航功能"}, {"label": "C", "text": "手动操控无人机降落"}, {"label": "D", "text": "等待信号恢复"}], "answer": "B"}, {"id": 86, "text": "不应属于无人机飞控计算机任务范畴的是", "options": [{"label": "A", "text": "数据中继"}, {"label": "B", "text": "姿态稳定与控制"}, {"label": "C", "text": "自主飞行控制"}, {"label": "D", "text": "相机参数调整"}], "answer": "A"}, {"id": 87, "text": "无人机通过", "options": [{"label": "A", "text": "伺服执行机构"}, {"label": "B", "text": "操纵杆"}, {"label": "C", "text": "脚蹬"}, {"label": "D", "text": "遥控器"}], "answer": "A"}, {"id": 88, "text": "无人机电气系统中电源和", "options": [{"label": "A", "text": "用电设备"}, {"label": "B", "text": "配电系统"}, {"label": "C", "text": "供电线路"}, {"label": "D", "text": "充电系统"}], "answer": "B"}, {"id": 89, "text": "无人机搭载任务设备重量主要受限制于", "options": [{"label": "A", "text": "空重"}, {"label": "B", "text": "载重能力"}, {"label": "C", "text": "最大起飞重量"}, {"label": "D", "text": "机身尺寸"}], "answer": "B"}, {"id": 90, "text": "飞机焦点的位置", "options": [{"label": "A", "text": "随仰角变化而改变"}, {"label": "B", "text": "不随仰角变化而改变"}, {"label": "C", "text": "随滚转角变化而改变"}, {"label": "D", "text": "随飞机的飞行速度变化而显著改变"}], "answer": "B"}, {"id": 91, "text": "飞机在空中飞行时，如果飞机处于平衡状态，则", "options": [{"label": "A", "text": "作用在飞机上的所有外力平衡，所有外力矩也平衡"}, {"label": "B", "text": "作用在飞机上的所有外力不平衡，所有外力矩平衡"}, {"label": "C", "text": "作用在飞机上的所有外力平衡，所有外力矩不平衡"}, {"label": "D", "text": "外力和外力矩均不平衡，但飞机保持匀速飞行"}], "answer": "A"}, {"id": 92, "text": "飞机重心位置的表示方法是", "options": [{"label": "A", "text": "用重心到平均气动力弦前缘的距离和平均气动力弦长之比的百分数来表示"}, {"label": "B", "text": "用重心到平均几何弦后缘的距离和平均几何弦长之比的百分数来表示"}, {"label": "C", "text": "用重心到机体基准面的距离和平均气动力弦长之比的百分数来表示"}, {"label": "D", "text": "用重心到机翼尖的距离和翼展之比的百分数来表示"}], "answer": "A"}, {"id": 93, "text": "飞机做等速直线水平飞行时，作用在飞机上的外载荷应满足", "options": [{"label": "A", "text": "升力等于重力，推力等于阻力"}, {"label": "B", "text": "升力等于重力，抬头力矩等于低头力矩"}, {"label": "C", "text": "升力等于重力，推力等于阻力，抬头力矩等于低头力矩"}, {"label": "D", "text": "升力大于重力，推力等于阻力"}], "answer": "C"}, {"id": 94, "text": "下列不是飞机飞行时所受的外载荷的是", "options": [{"label": "A", "text": "重力"}, {"label": "B", "text": "气动力"}, {"label": "C", "text": "惯性力"}, {"label": "D", "text": "发动机的推力"}], "answer": "C"}, {"id": 95, "text": "研究飞机运动时选用的机体坐标，其", "options": [{"label": "A", "text": "以飞机重心为原点，纵轴和横轴确定的平面为对称面"}, {"label": "B", "text": "以全机焦点为原点，纵轴和立轴确定的平面为对称面"}, {"label": "C", "text": "以飞机重心为原点，纵轴和立轴确定的平面为对称面"}, {"label": "D", "text": "以飞机机头为原点，纵轴和横轴确定的平面为对称面"}], "answer": "C"}, {"id": 96, "text": "以下", "options": [{"label": "A", "text": "锂电池"}, {"label": "B", "text": "汽油"}, {"label": "C", "text": "太阳能"}, {"label": "D", "text": "干电池"}], "answer": "D"}, {"id": 97, "text": "无人机“悬停”功能的核心是让无人机在", "options": [{"label": "A", "text": "水平方向"}, {"label": "B", "text": "垂直方向"}, {"label": "C", "text": "三维空间"}, {"label": "D", "text": "指定高度"}], "answer": "C"}, {"id": 98, "text": "飞行前检查无人机螺旋桨，以下", "options": [{"label": "A", "text": "螺旋桨有细小裂纹"}, {"label": "A", "text": "0.25千克"}, {"label": "A", "text": "电池耗电加快"}, {"label": "B", "text": "螺旋桨表面有灰尘"}, {"label": "B", "text": "1千克"}, {"label": "B", "text": "失控坠毁"}, {"label": "C", "text": "螺旋桨轻微变形"}, {"label": "C", "text": "2千克"}, {"label": "C", "text": "图传卡顿"}, {"label": "D", "text": "螺旋桨颜色磨损"}, {"label": "D", "text": "5千克"}, {"label": "D", "text": "遥控器信号减弱"}], "answer": "A"}, {"id": 101, "text": "以下", "options": [{"label": "A", "text": "在空旷田野飞行"}, {"label": "B", "text": "避开机场净空区飞行"}, {"label": "C", "text": "在军事管理区上空飞行"}, {"label": "D", "text": "在自家屋顶低空飞行"}], "answer": "C"}, {"id": 102, "text": "无人机电池充电时，应使用", "options": [{"label": "A", "text": "任意品牌充电器"}, {"label": "B", "text": "该型号无人机专用充电器"}, {"label": "C", "text": "手机充电器"}, {"label": "D", "text": "充电宝"}], "answer": "B"}, {"id": 103, "text": "无人机飞行日志需记录的核心信息不包括", "options": [{"label": "A", "text": "飞行时间和地点"}, {"label": "B", "text": "驾驶员姓名"}, {"label": "C", "text": "无人机品牌"}, {"label": "D", "text": "飞行时的温度"}], "answer": "D"}, {"id": 104, "text": "下列", "options": [{"label": "A", "text": "飞行速度、空气密度、机翼面积"}, {"label": "B", "text": "飞机的翼型和平面形状"}, {"label": "C", "text": "飞机的安装角和上反角"}, {"label": "D", "text": "飞机的燃油量"}], "answer": "C"}, {"id": 105, "text": "下列", "options": [{"label": "A", "text": "机翼的平面形状"}, {"label": "B", "text": "机翼的翼型"}, {"label": "C", "text": "机翼的根尖比"}, {"label": "D", "text": "飞机的飞行高度"}], "answer": "B"}, {"id": 106, "text": "影响无人机飞行的气象因素主要包括风、", "options": [{"label": "A", "text": "大气温度"}, {"label": "B", "text": "大气湿度"}, {"label": "C", "text": "大气污染"}, {"label": "D", "text": "环境移速无人机驾驶员"}], "answer": "A"}, {"id": 107, "text": "无人机根据操作方式不同可分为", "options": [{"label": "A", "text": "多旋翼无人机"}, {"label": "B", "text": "滑翔无人机"}, {"label": "C", "text": "穿越机"}, {"label": "D", "text": "植保机"}], "answer": "A"}, {"id": 108, "text": "无人机地面站显示系统应能显示", "options": [{"label": "A", "text": "无人机飞行员状态"}, {"label": "B", "text": "飞行器状态及链路、载荷状态"}, {"label": "C", "text": "飞行空域信息"}, {"label": "D", "text": "地面站操作人员信息"}], "answer": "B"}, {"id": 109, "text": "多旋翼无人机其定位和导航主要采用GPS和", "options": [{"label": "A", "text": "地磁罗盘"}, {"label": "A", "text": "指挥处理中心"}, {"label": "B", "text": "北斗卫星系统"}, {"label": "B", "text": "无人机控制站"}, {"label": "C", "text": "伽利略导航系统"}, {"label": "C", "text": "载荷控制站"}, {"label": "D", "text": "指南针"}, {"label": "D", "text": "地面导航基站"}], "answer": "A"}, {"id": 121, "text": "无人机纵轴前方的延长线称为", "options": [{"label": "A", "text": "航向线"}, {"label": "B", "text": "跑道"}, {"label": "C", "text": "滑线"}, {"label": "D", "text": "起飞线"}], "answer": "A"}, {"id": 122, "text": "减小干扰阻力的主要措施是", "options": [{"label": "A", "text": "把机翼表面做的很光滑"}, {"label": "B", "text": "部件连接处采取整流措施"}, {"label": "C", "text": "把暴露的部件做成流线型"}, {"label": "D", "text": "增大机翼的展弦比"}], "answer": "B"}, {"id": 123, "text": "下列关于压差阻力", "options": [{"label": "A", "text": "物体的最大迎风面积越大，压差阻力越小"}, {"label": "B", "text": "物体形状越接近流线型，压差阻力越大"}, {"label": "C", "text": "物体的最大迎风面积越大,压差阻力越大"}, {"label": "D", "text": "压差阻力与物体的长度成正比"}], "answer": "C"}, {"id": 124, "text": "下列关于诱导阻力的说法正确的是", "options": [{"label": "A", "text": "增大机翼的展弦比可以减小诱导阻力"}, {"label": "B", "text": "把暴露在气流中的所有部件和零件都做成流线型，可以减小诱导阻力"}, {"label": "C", "text": "在飞机各部件之间加装整流包皮,可以减小诱导阻力"}, {"label": "D", "text": "减小机翼面积可以显著减小诱导阻力"}], "answer": "A"}, {"id": 125, "text": "下列关于阻力的说法正确的是", "options": [{"label": "A", "text": "干扰阻力是由于气流的下洗而引起的"}, {"label": "B", "text": "在飞机各部件之间加装整流包皮可以减小诱导阻力"}, {"label": "C", "text": "干扰阻力是飞机各部件之间由于气流相互干扰而产生的一种额外阻力"}, {"label": "D", "text": "摩擦阻力是由于翼尖涡流引起的"}], "answer": "C"}, {"id": 126, "text": "地面控制站飞行参数综合显示的内容包括", "options": [{"label": "A", "text": "飞行与导航信息、数据链状态信息、设备状态信息、指令信息"}, {"label": "B", "text": "导航信息显示、航迹绘制显示以及地理信息的显示"}, {"label": "C", "text": "告警信息、地图航迹显示信息"}, {"label": "D", "text": "无人机生产批次信息、设备序列号信息"}], "answer": "A"}, {"id": 127, "text": "活塞发动机的爆震最易发生在", "options": [{"label": "A", "text": "发动机处于小转速和大进气压力状态工作"}, {"label": "B", "text": "发动机处于高功率状态下工作时"}, {"label": "C", "text": "发动机处于大转速和小进气压力状态工作"}, {"label": "D", "text": "发动机冷车怠速运转时"}], "answer": "A"}, {"id": 128, "text": "活塞发动机混合气过富油燃烧将引起", "options": [{"label": "A", "text": "发动机过热"}, {"label": "B", "text": "电嘴积炭"}, {"label": "C", "text": "发动机工作平稳，但燃油消耗量变大"}, {"label": "D", "text": "发动机扭矩大幅提升"}], "answer": "B"}, {"id": 129, "text": "下列", "options": [{"label": "A", "text": "陀螺控制"}, {"label": "B", "text": "指令控制"}, {"label": "C", "text": "载荷控制"}, {"label": "D", "text": "燃料控制"}], "answer": "B"}, {"id": 130, "text": "无人机的发动机采用动力供油系统但装有增压泵，主要是为了", "options": [{"label": "A", "text": "减少油箱的剩余燃油"}, {"label": "B", "text": "保证大速度巡航的用油"}, {"label": "C", "text": "保证爬升、下降及其它特殊情况下的正常供油"}, {"label": "D", "text": "提升燃油的燃烧效率"}], "answer": "C"}, {"id": 131, "text": "下列说法正确的是", "options": [{"label": "A", "text": "物体的最大迎风面积越大，压差阻力越小"}, {"label": "B", "text": "物体形状越接近流线型，压差阻力越大"}, {"label": "C", "text": "物体的最大迎风面积越大，压差阻力越大"}, {"label": "D", "text": "压差阻力与物体的表面粗糙度成正比"}], "answer": "C"}, {"id": 132, "text": "有些飞机的翼尖部位安装了翼稍小翼，它的功用是", "options": [{"label": "A", "text": "减小摩擦阻力"}, {"label": "B", "text": "减小压差阻力"}, {"label": "C", "text": "减小诱导阻力"}, {"label": "D", "text": "增大升力系数"}], "answer": "C"}, {"id": 133, "text": "飞机升阻比值的大小主要随", "options": [{"label": "A", "text": "飞行速度"}, {"label": "B", "text": "飞行迎角"}, {"label": "C", "text": "机翼面积"}, {"label": "D", "text": "飞机重量"}], "answer": "B"}, {"id": 134, "text": "下列正确的是", "options": [{"label": "A", "text": "飞机的升阻比越大,飞机的空气动力特性越差"}, {"label": "B", "text": "飞机的升阻比越小,飞机的空气动力特性越好"}, {"label": "C", "text": "飞机的升阻比越大,飞机的空气动力特性越好"}, {"label": "D", "text": "升阻比与飞机的空气动力特性无关"}], "answer": "C"}, {"id": 135, "text": "减少飞机摩擦阻力的措施是", "options": [{"label": "A", "text": "保持飞机表面光洁度"}, {"label": "B", "text": "减小迎风面积"}, {"label": "C", "text": "增大后掠角"}, {"label": "D", "text": "加装翼梢小翼"}], "answer": "A"}, {"id": 136, "text": "无人机燃油箱通气目的之一是", "options": [{"label": "A", "text": "通气增大供油流量"}, {"label": "B", "text": "保证向发动机正常供油"}, {"label": "C", "text": "通气减小供油流量"}, {"label": "D", "text": "过滤燃油中的杂质颗粒"}], "answer": "B"}, {"id": 137, "text": "汽化器式活塞发动机在何时容易出现汽化器回火现象", "options": [{"label": "A", "text": "热发动起动时"}, {"label": "B", "text": "油门收的过猛"}, {"label": "C", "text": "寒冷天气第一次起动时"}, {"label": "D", "text": "发动机匀速巡航飞行时"}], "answer": "C"}, {"id": 138, "text": "二冲程活塞汽油发动机应使用何种润滑油", "options": [{"label": "A", "text": "2T机油"}, {"label": "B", "text": "4T机油"}, {"label": "C", "text": "汽车机油"}, {"label": "D", "text": "工业液压油"}], "answer": "A"}, {"id": 139, "text": "关于桨叶的剖面形状说法错误的是", "options": [{"label": "A", "text": "桨叶的剖面形状称为桨叶翼型。。"}, {"label": "B", "text": "桨叶翼型常见的有平凸型.双凸型和非对称型"}, {"label": "C", "text": "一般用相对厚度.最大厚度位置.相对弯度.最大弯度位置等参数来说明桨叶翼型"}, {"label": "D", "text": "桨叶翼型仅通过 “弯度” 一个参数就能完整描述特"}], "answer": "B"}, {"id": 140, "text": "低空无人机飞行高度为", "options": [{"label": "A", "text": "100米-1000米"}, {"label": "B", "text": "200米-800米"}, {"label": "C", "text": "50米-100米"}, {"label": "D", "text": "10米-50米"}], "answer": "A"}, {"id": 141, "text": "\"为了解决大速度下空气压缩性的影响和噪音问题，可以对桨叶进行", "options": [{"label": "A", "text": "把桨叶尖部作成后掠形"}, {"label": "B", "text": "采用矩形桨叶"}, {"label": "C", "text": "采用尖削桨叶"}, {"label": "D", "text": "将桨叶根部加厚处理"}], "answer": "A"}, {"id": 142, "text": ".飞行控制是指采用", "options": [{"label": "A", "text": "遥感方式"}, {"label": "B", "text": "遥测方式"}, {"label": "C", "text": "遥控方式"}, {"label": "D", "text": "测绘方式"}], "answer": "C"}, {"id": 143, "text": "指令信息不包括", "options": [{"label": "A", "text": "发送代码"}, {"label": "B", "text": "发送状态"}, {"label": "C", "text": "接收状态"}, {"label": "D", "text": "无人机的电池剩余容量信息"}], "answer": "A"}, {"id": 144, "text": "现代旋翼机通常包括", "options": [{"label": "A", "text": "直升机、旋翼机和倾转旋翼机"}, {"label": "B", "text": "单旋翼和多旋翼"}, {"label": "C", "text": "直升机、多轴和旋翼机"}, {"label": "D", "text": "扑翼机、伞翼无人机"}], "answer": "A"}, {"id": 145, "text": "对于带襟翼无人机，放下襟翼，飞机的升力将", "options": [{"label": "A", "text": "增大、减小"}, {"label": "B", "text": "增大、增大"}, {"label": "C", "text": "减小、减小"}, {"label": "D", "text": "减小、增大"}], "answer": "B"}, {"id": 146, "text": "随着飞行速度的提高下列关于阻力的说法正确的是", "options": [{"label": "A", "text": "诱导阻力增大,废阻力增大"}, {"label": "B", "text": "诱导阻力减小，废阻力减小"}, {"label": "C", "text": "诱导阻力减小，废阻力增大"}, {"label": "D", "text": "诱导阻力与废阻力同步增大"}], "answer": "C"}, {"id": 147, "text": "表面脏污的机翼与表面光洁的机翼相比", "options": [{"label": "A", "text": "最大升力系数下降，阻力系数增大"}, {"label": "B", "text": "相同升力系数时其迎角减小"}, {"label": "C", "text": "同迎角下升力系数相同，阻力系数加大"}, {"label": "D", "text": "阻力系数不变，升力系数显著增大"}], "answer": "A"}, {"id": 148, "text": "关于升阻比下列说法正确的是", "options": [{"label": "A", "text": "在最大升力系数时阻力一定最小"}, {"label": "B", "text": "最大升阻比时，一定是达到临界攻角"}, {"label": "C", "text": "升阻比随迎角的改变而改变"}, {"label": "D", "text": "升阻比与飞机的飞行速度无关"}], "answer": "C"}, {"id": 149, "text": "在相同飞行速度和迎角情况下，翼面不清洁或前缘结冰的机翼升力", "options": [{"label": "A", "text": "大于基本翼型升力"}, {"label": "B", "text": "等于基本翼型升力"}, {"label": "C", "text": "小于基本翼型升力"}, {"label": "D", "text": "与基本翼型升力的差值随高度变化"}], "answer": "C"}, {"id": 150, "text": "飞机前缘结冰对飞行的主要影响", "options": [{"label": "A", "text": "增大了飞机重量，便起飞困难"}, {"label": "B", "text": "增大了临界攻角,使飞机易失速"}, {"label": "C", "text": "相同迎角，升力系数下降"}, {"label": "D", "text": "减小了飞机的阻力，使飞行速度加快"}], "answer": "C"}, {"id": 151, "text": "多旋翼无人机旋翼布局可分为I型、X型、", "options": [{"label": "A", "text": "V型"}, {"label": "B", "text": "Z型"}, {"label": "C", "text": "H型"}, {"label": "D", "text": "A型"}], "answer": "A"}, {"id": 152, "text": "无人机常见发射方式有手抛发射、", "options": [{"label": "A", "text": "零长发射"}, {"label": "B", "text": "自动发射"}, {"label": "C", "text": "低速发射"}, {"label": "D", "text": "高速发射"}], "answer": "A"}, {"id": 153, "text": "连接地球两极且垂直于赤道的圆周线称为", "options": [{"label": "A", "text": "经线"}, {"label": "B", "text": "纬线"}, {"label": "C", "text": "0度线"}, {"label": "D", "text": "北回归线"}], "answer": "A"}, {"id": 154, "text": "无人机飞行员操纵升降舵时，飞行器将绕", "options": [{"label": "A", "text": "横轴运动"}, {"label": "B", "text": "纵轴运动"}, {"label": "C", "text": "立轴运动"}, {"label": "D", "text": "斜轴运动"}], "answer": "A"}, {"id": 155, "text": "无人机飞行员操纵方向舵时，飞行器将绕", "options": [{"label": "A", "text": "横轴运动"}, {"label": "B", "text": "纵轴运动"}, {"label": "C", "text": "重心轴运动"}, {"label": "D", "text": "立轴运动"}], "answer": "C"}, {"id": 156, "text": "下列关于升阻比的说法不正确的是", "options": [{"label": "A", "text": "升力系数达到最大时，升阻比也达到最大"}, {"label": "B", "text": "升力和阻力之比升阻比达到最大之前，随迎角增加"}, {"label": "C", "text": "升阻比成线性增加"}, {"label": "D", "text": "升阻比在有利迎角时达到最大值"}], "answer": "A"}, {"id": 157, "text": "从原点作极曲线的切线，切点所对应的迎角值是", "options": [{"label": "A", "text": "最大迎角"}, {"label": "B", "text": "有利迎角"}, {"label": "C", "text": "最小迎角"}, {"label": "D", "text": "临界迎角"}], "answer": "B"}, {"id": 158, "text": "飞行中操作扰流板伸出", "options": [{"label": "A", "text": "增加机翼上翼面的面积以提高升力"}, {"label": "B", "text": "阻挡气流的流动，增大阻力"}, {"label": "C", "text": "增加飞机抬头力矩，辅助飞机爬升"}, {"label": "D", "text": "减小飞机的俯仰力矩，使飞机俯冲"}], "answer": "B"}, {"id": 159, "text": "舵面遥控状态时，平飞中向右稍压副翼杆量，无人机", "options": [{"label": "A", "text": "右翼升力大于左翼升力"}, {"label": "B", "text": "左翼升力大于右翼升力"}, {"label": "C", "text": "左翼升力等于右翼升力"}, {"label": "D", "text": "左右翼升力先增大后减小"}], "answer": "B"}, {"id": 160, "text": "舵面遥控状态时，平飞中向前稍推升降舵杆量，飞行器的迎角", "options": [{"label": "A", "text": "增大"}, {"label": "B", "text": "减小"}, {"label": "C", "text": "先减小后增大"}, {"label": "D", "text": "保持不变"}], "answer": "B"}, {"id": 161, "text": "飞机的下滑角是", "options": [{"label": "A", "text": "升力与阻力的夹角"}, {"label": "B", "text": "飞行轨迹与水平面的夹角"}, {"label": "C", "text": "阻力与重力的夹角"}, {"label": "D", "text": "升力与重力的夹角"}], "answer": "B"}, {"id": 162, "text": "使飞机获得最大下滑距离的速度是", "options": [{"label": "A", "text": "最大下滑速度"}, {"label": "B", "text": "失速速度"}, {"label": "C", "text": "下滑有利速度"}, {"label": "D", "text": "巡航速度"}], "answer": "C"}, {"id": 163, "text": "下滑有利速度使", "options": [{"label": "A", "text": "飞机下滑阻力最小"}, {"label": "B", "text": "飞机下滑角最大"}, {"label": "C", "text": "飞机下滑升力最大"}, {"label": "D", "text": "飞机下滑时间最短"}], "answer": "A"}, {"id": 164, "text": "根据机翼升力和阻力计算公式可以得出,通过增大机翼面积来增大升力的同时", "options": [{"label": "A", "text": "阻力不变"}, {"label": "B", "text": "阻力减小"}, {"label": "C", "text": "阻力也随着增大"}, {"label": "D", "text": "阻力与机翼面积成反比"}], "answer": "C"}, {"id": 165, "text": "利用增大机翼弯度来提高机翼的升力系数，会导致", "options": [{"label": "A", "text": "机翼上表面最低压力点前移，减小临界迎角"}, {"label": "B", "text": "机翼上表面最低压力点后移，减小临界迎角"}, {"label": "C", "text": "机翼上表面最低压力点前移，加大临界迎角"}, {"label": "D", "text": "机翼上表面最低压力点后移，加大临界迎角"}], "answer": "A"}, {"id": 166, "text": "使用机翼后缘襟翼提高升力系数的同时临界迎角减小的主要原因是", "options": [{"label": "A", "text": "放下后缘襟翼时，增大了机翼的弯度"}, {"label": "B", "text": "放下后缘襟翼时、增大了机翼的面积"}, {"label": "C", "text": "放下后缘襟翼时，在上下翼面之间形成了缝隙"}, {"label": "D", "text": "机翼上表面最低压力点后移，加大临界迎角"}], "answer": "A"}, {"id": 167, "text": "增大机翼弯度可以增大机翼升力的原理是", "options": [{"label": "A", "text": "使附面层保持层流状态"}, {"label": "B", "text": "加快机翼前缘上表面气流的流速"}, {"label": "C", "text": "加快机翼后缘气流的流速"}, {"label": "D", "text": "减小机翼上表面的气压梯度"}], "answer": "B"}, {"id": 168, "text": "使用扰流板操纵飞机向左盘旋时，下述说法正确的是", "options": [{"label": "A", "text": "左机翼飞行扰流板向上打开，右机翼飞行扰流板向上打开"}, {"label": "B", "text": "左机翼飞行扰流板向上打开，右机翼飞行扰流板不动"}, {"label": "C", "text": "左机翼飞行扰流扳不动，右机翼飞行扰流板向上打开"}, {"label": "D", "text": "左右机翼扰流板同时向下打开"}], "answer": "B"}, {"id": 169, "text": "前缘缝翼的功用有", "options": [{"label": "A", "text": "增大机翼的安装角"}, {"label": "B", "text": "增加飞机的稳定性"}, {"label": "C", "text": "增大最大升力系数"}, {"label": "D", "text": "减小飞机的起飞滑跑距离"}], "answer": "C"}, {"id": 170, "text": "用下滑有利速度下滑，飞机的", "options": [{"label": "A", "text": "升阻比最大"}, {"label": "B", "text": "下滑速度最大"}, {"label": "C", "text": "下滑角最大"}, {"label": "D", "text": "升力最大"}], "answer": "A"}, {"id": 171, "text": "在定高直线飞行中，下面关于飞机升力的说法，正确的是", "options": [{"label": "A", "text": "空速小时必须减小迎角，以产生适当的升力来保持高度"}, {"label": "B", "text": "空速大时必须减小迎角，以产生适当的升力来保持高度"}, {"label": "C", "text": "空速大时必须增大迎角，以产生适当的升力来保持高度"}, {"label": "D", "text": "空速不变时需持续增大迎角才能保持高度"}], "answer": "B"}, {"id": 172, "text": "关于平凸翼型的剖面形状，下面说法正确的是", "options": [{"label": "A", "text": "上下翼面的弯度相同"}, {"label": "B", "text": "机翼上表面的弯度小于下表面的弯度"}, {"label": "C", "text": "机翼上表面的弯度大于下表面的弯度"}, {"label": "D", "text": "机翼上下表面均无弯度"}], "answer": "C"}, {"id": 173, "text": "空速适度减小时，为保持高度，应实施的操纵是", "options": [{"label": "A", "text": "增大迎角，使升力的增加大于阻力的增加"}, {"label": "B", "text": "增大迎角，以保持升力不变"}, {"label": "C", "text": "减小迎角，以保持阻力不变"}, {"label": "D", "text": "减小迎角并加大油门"}], "answer": "B"}, {"id": 174, "text": "根据机翼的设计特点，其产生的升力来自于", "options": [{"label": "A", "text": "机翼上下表面的正压强"}, {"label": "B", "text": "机翼下表面的负压和上表面的正压"}, {"label": "C", "text": "机翼下表面的正压和上表面的负压"}, {"label": "D", "text": "机翼上下表面的负压差"}], "answer": "C"}, {"id": 175, "text": "下列关于扰流板的叙述说法错误的是", "options": [{"label": "A", "text": "扰流板可作为减速板缩短飞机滑跑距离"}, {"label": "B", "text": "可辅助副翼实现飞机横向操纵"}, {"label": "C", "text": "可代替副翼实现飞机横向操纵"}, {"label": "D", "text": "扰流板打开时会减小机翼的升力"}], "answer": "C"}, {"id": 176, "text": "亚音速气流经过收缩管道后", "options": [{"label": "A", "text": "速度增加，压强增大"}, {"label": "B", "text": "速度降低，压强下降"}, {"label": "C", "text": "速度增加，压强下降"}, {"label": "D", "text": "速度不变，压强减小"}], "answer": "C"}, {"id": 177, "text": "大疆科技有限责任公司先后推出", "options": [{"label": "A", "text": "精灵系列"}, {"label": "B", "text": "黔中1号"}, {"label": "C", "text": "蜜蜂-28"}, {"label": "D", "text": "攻击-11"}], "answer": "A"}, {"id": 178, "text": "多旋翼无人机按轴数不同可分为三轴、四轴、", "options": [{"label": "A", "text": "六轴"}, {"label": "B", "text": "七轴"}, {"label": "C", "text": "九轴"}, {"label": "D", "text": "十轴"}], "answer": "A"}, {"id": 179, "text": "目前在无人机领域电动机是", "options": [{"label": "A", "text": "无刷电动机"}, {"label": "B", "text": "有刷电动机"}, {"label": "C", "text": "异步电动机"}, {"label": "D", "text": "交流电动机P28"}], "answer": "A"}, {"id": 180, "text": "飞机转弯的向心力是", "options": [{"label": "A", "text": "飞机的拉力"}, {"label": "B", "text": "方向舵上产生的气动力"}, {"label": "C", "text": "飞机升力的水平分力"}, {"label": "D", "text": "发动机的推力"}], "answer": "C"}, {"id": 181, "text": "仅偏转副翼使飞机水平左转弯时，出现", "options": [{"label": "A", "text": "右侧滑"}, {"label": "B", "text": "左侧滑"}, {"label": "C", "text": "无侧滑"}, {"label": "D", "text": "无滑跑"}], "answer": "B"}, {"id": 182, "text": "偏转副翼使飞机转弯时，两翼的阻力是", "options": [{"label": "A", "text": "内侧机翼阻力大"}, {"label": "B", "text": "外侧机翼阻力大"}, {"label": "C", "text": "相等"}, {"label": "D", "text": "两翼阻力先大后小交替变化"}], "answer": "B"}, {"id": 183, "text": "偏转副翼使飞机左转弯时，为修正逆偏转的影响，应", "options": [{"label": "A", "text": "向左偏转方向舵"}, {"label": "B", "text": "向右偏转方向舵"}, {"label": "C", "text": "向右压杆"}, {"label": "D", "text": "向左推升降舵"}], "answer": "A"}, {"id": 184, "text": "偏转副翼使飞机右转弯时，为修正逆偏转的影响，应", "options": [{"label": "A", "text": "向左偏转方向舵"}, {"label": "B", "text": "向右偏转方向舵"}, {"label": "C", "text": "向左压杆"}, {"label": "D", "text": "向右拉升降舵"}], "answer": "B"}, {"id": 185, "text": "飞机进行的匀速俯冲拉起飞行，则", "options": [{"label": "A", "text": "速度不发生变化"}, {"label": "B", "text": "是在平衡外载荷作用下进行的飞行"}, {"label": "C", "text": "飞行速度方向的变化是由于存在着向心力"}, {"label": "D", "text": "飞机的升力等于重力"}], "answer": "C"}, {"id": 186, "text": "飞机的爬升角是指", "options": [{"label": "A", "text": "飞机上升轨迹与水平线之间的夹角"}, {"label": "B", "text": "飞机立轴与水平线之间的夹角"}, {"label": "C", "text": "飞机横轴与水平线之间的夹角"}, {"label": "D", "text": "飞机纵轴与相对气流的夹角"}], "answer": "A"}, {"id": 187, "text": "飞机横轴与水平线之间的夹角", "options": [{"label": "A", "text": "减速下滑、拉平接地和减速滑跑三个阶段"}, {"label": "B", "text": "下滑、拉平、平飘、接地和着陆滑跑五个阶段"}, {"label": "C", "text": "下滑、拉平、接地、着陆滑跑和刹车五个阶段"}, {"label": "D", "text": "下滑、接地、滑跑三个阶段"}], "answer": "B"}, {"id": 188, "text": "下列叙述与飞机的正常盘旋飞行无关的是", "options": [{"label": "A", "text": "保持飞行高度不变"}, {"label": "B", "text": "保持飞机作圆周飞行"}, {"label": "C", "text": "保持飞机等速直线飞行"}, {"label": "D", "text": "保持飞机的倾斜角不变"}], "answer": "C"}, {"id": 189, "text": "飞机平飞要有足够的升力来平衡飞机的重力，产生该升力所需的速度叫做", "options": [{"label": "A", "text": "飞机平飞所需速度"}, {"label": "B", "text": "飞机平飞有利速度"}, {"label": "C", "text": "飞机平飞最大速度"}, {"label": "D", "text": "飞机的失速速度"}], "answer": "A"}, {"id": 190, "text": "飞机爬升角的大小取决于", "options": [{"label": "A", "text": "剩余推力"}, {"label": "B", "text": "飞机重量"}, {"label": "C", "text": "剩余推力和飞机重"}, {"label": "D", "text": "飞机的飞行速度"}], "answer": "C"}, {"id": 191, "text": "目视判断风切变的参照物，以下不正确的是", "options": [{"label": "A", "text": "雷暴冷性外流气流的尘卷风（云）"}, {"label": "B", "text": "卷积云带来的降雨"}, {"label": "C", "text": "雷暴云体下垂的雨幡"}, {"label": "D", "text": "地面的风向袋突然偏转"}], "answer": "B"}, {"id": 192, "text": "风切变的仪表判断法，以下不正确的是", "options": [{"label": "A", "text": "空速表指示的非理性变化"}, {"label": "B", "text": "俯仰角指示快速变化"}, {"label": "C", "text": "发动机转速和地速快速变化"}, {"label": "D", "text": "气压高度表读数缓慢变化"}], "answer": "C"}, {"id": 193, "text": "根据地面天气图上分析的等压线，我们能观察出", "options": [{"label": "A", "text": "降水区域"}, {"label": "B", "text": "气压梯度"}, {"label": "C", "text": "槽线位置"}, {"label": "D", "text": "气温的分布"}], "answer": "B"}, {"id": 194, "text": "地面天气图上填写的气压是", "options": [{"label": "A", "text": "本站气压"}, {"label": "B", "text": "海平面气压"}, {"label": "C", "text": "场面气压"}, {"label": "D", "text": "标准大气压"}], "answer": "B"}, {"id": 195, "text": "以下", "options": [{"label": "A", "text": "红外卫星云图"}, {"label": "A", "text": "目标反射太阳辐射的大小"}, {"label": "B", "text": "可见光卫星云图"}, {"label": "B", "text": "目标的温度"}, {"label": "C", "text": "多光谱卫星云图"}, {"label": "C", "text": "目标的高低"}, {"label": "D", "text": "黑白卫星云图"}, {"label": "D", "text": "目标的湿度"}], "answer": "C"}, {"id": 197, "text": "飞机转弯时，坡度有继续增大的倾向，原因是", "options": [{"label": "A", "text": "转弯外侧阻力比内侧的大"}, {"label": "B", "text": "转弯外侧升力比内侧的大"}, {"label": "C", "text": "转弯外侧阻力比内侧的小"}, {"label": "D", "text": "转弯外侧重力比内侧的大"}], "answer": "B"}, {"id": 198, "text": "飞机坡度增大，升力的垂直分量", "options": [{"label": "A", "text": "增大"}, {"label": "B", "text": "减小"}, {"label": "C", "text": "先减小后增大"}, {"label": "D", "text": "保持不变"}], "answer": "B"}, {"id": 199, "text": "消费级无人机主要用于", "options": [{"label": "A", "text": "高清航拍"}, {"label": "B", "text": "农林植保"}, {"label": "C", "text": "火灾救援"}, {"label": "D", "text": "战争"}], "answer": "A"}, {"id": 200, "text": "无人机发端于", "options": [{"label": "A", "text": "二十世纪初"}, {"label": "B", "text": "十九世纪末"}, {"label": "C", "text": "二十一世纪"}, {"label": "D", "text": "二十世纪末"}], "answer": "A"}, {"id": 201, "text": "我国具有代表性的无人机主要有", "options": [{"label": "A", "text": "“翼龙”无人机"}, {"label": "B", "text": "大疆无人机"}, {"label": "C", "text": "猎人无人机"}, {"label": "D", "text": "红隼无人机"}], "answer": "A"}, {"id": 202, "text": "卫星云图上下列", "options": [{"label": "A", "text": "在可见光云图上，卷云呈灰深灰色"}, {"label": "B", "text": "在红外云图上，卷云顶温度很低，呈白色"}, {"label": "C", "text": "无论可见光还是红外云图，卷云没有纤维结构"}, {"label": "D", "text": "卷云在红外云图上的色调比中云更白"}], "answer": "C"}, {"id": 203, "text": "空域管理的具体办法由", "options": [{"label": "A", "text": "民用航空局"}, {"label": "B", "text": "中央军事委员会"}, {"label": "C", "text": "国务院和中央军事委员会"}, {"label": "D", "text": "民航局和中央军委联合制定"}], "answer": "C"}, {"id": 204, "text": "在一个划定的管制空域内，由", "options": [{"label": "A", "text": "军航或民航的一个空中交通管制单位"}, {"label": "B", "text": "军航和民航的各一个空中交通管制单位"}, {"label": "C", "text": "军航的一个空中交通管制单位军航或民航的一个空中交通管制单位"}, {"label": "D", "text": "军航和民航的共同空中交通管制单位"}], "answer": "A"}, {"id": 205, "text": "飞机的重心位置对飞机的", "options": [{"label": "A", "text": "纵向稳定性产生影响"}, {"label": "B", "text": "方向稳定性产生影响"}, {"label": "C", "text": "横向稳定性产生影响"}, {"label": "D", "text": "操纵性无任何影响"}], "answer": "A"}, {"id": 206, "text": "影响飞机方向稳定力矩的因素主要是", "options": [{"label": "A", "text": "飞机重心位置和飞行M数"}, {"label": "B", "text": "飞机焦点位置和飞行高度"}, {"label": "C", "text": "飞机迎角、机身和垂尾面积"}, {"label": "D", "text": "机翼的展弦比和弯度"}], "answer": "C"}, {"id": 207, "text": "飞机的方向阻尼力矩主要由", "options": [{"label": "A", "text": "水平尾翼产生"}, {"label": "B", "text": "垂直尾翼产生"}, {"label": "C", "text": "机身产生"}, {"label": "D", "text": "机翼产生"}], "answer": "B"}, {"id": 208, "text": "飞机的横向阻尼力矩主要由", "options": [{"label": "A", "text": "水平尾翼产生"}, {"label": "B", "text": "垂直尾翼产生"}, {"label": "C", "text": "机翼产生"}, {"label": "D", "text": "垂尾与水平尾翼共同产生"}], "answer": "C"}, {"id": 209, "text": "对飞机方向稳定性影响最大的是", "options": [{"label": "A", "text": "飞机的最大迎风面积"}, {"label": "B", "text": "水平尾翼"}, {"label": "C", "text": "垂直尾翼"}, {"label": "D", "text": "机翼的后掠角"}], "answer": "C"}, {"id": 210, "text": "常规布局飞机的主要舵面指的是", "options": [{"label": "A", "text": "升降舵、方向舵、襟翼"}, {"label": "B", "text": "方向舵、襟翼、缝翼"}, {"label": "C", "text": "升降舵、方向舵、副翼"}, {"label": "D", "text": "襟翼、缝翼、扰流板"}], "answer": "C"}, {"id": 211, "text": "具有正静安定性的飞机，当受到扰动使平衡状态变化后，有", "options": [{"label": "A", "text": "回到原平衡状态的趋势"}, {"label": "B", "text": "继续偏离原平衡状态的趋势"}, {"label": "C", "text": "保持偏离后的平衡状态"}, {"label": "D", "text": "随机偏离或恢复"}], "answer": "A"}, {"id": 212, "text": "具有负静安定性的飞机，当受到扰动使平衡状态变化后，有", "options": [{"label": "A", "text": "回到原平衡状态的趋势"}, {"label": "B", "text": "继续偏离原平衡状态的趋势"}, {"label": "C", "text": "保持偏离后的平衡状态的趋势"}, {"label": "D", "text": "短暂恢复后再次偏离"}], "answer": "B"}, {"id": 213, "text": "飞机从已建立的平衡状态发生偏离，若", "options": [{"label": "A", "text": "飞机振荡的振幅减小使飞机回到原来的平衡状态"}, {"label": "B", "text": "飞机振荡的振幅持续增大"}, {"label": "C", "text": "飞机振荡的振幅不增大也不减小"}, {"label": "D", "text": "飞机振荡的频率逐渐加快"}], "answer": "A"}, {"id": 214, "text": "飞机的纵向安定性有利于", "options": [{"label": "A", "text": "防止飞机绕立轴偏转过快"}, {"label": "B", "text": "防止飞机绕纵轴滚转过快"}, {"label": "C", "text": "防止飞机抬头过高或低头过低"}, {"label": "D", "text": "防止飞机侧滑过大"}], "answer": "C"}, {"id": 215, "text": "飞机的压力中心是", "options": [{"label": "A", "text": "压力最低的点"}, {"label": "B", "text": "压力最高的点"}, {"label": "C", "text": "升力的着力点"}, {"label": "D", "text": "机翼的几何中心"}], "answer": "C"}, {"id": 216, "text": "飞机迎角增大，压力中心的位置会", "options": [{"label": "A", "text": "前移"}, {"label": "B", "text": "后移"}, {"label": "C", "text": "保持不变"}, {"label": "D", "text": "随机移动"}], "answer": "A"}, {"id": 217, "text": "飞机绕立轴的稳定性称为", "options": [{"label": "A", "text": "纵向稳定性"}, {"label": "B", "text": "航向稳定性"}, {"label": "C", "text": "横向稳定性"}, {"label": "D", "text": "滚转稳定性"}], "answer": "B"}, {"id": 218, "text": "描述飞机在空间姿态的姿态角有", "options": [{"label": "A", "text": "迎角，偏航角，滚转角"}, {"label": "B", "text": "滚转角，偏航角，俯仰角"}, {"label": "C", "text": "俯仰角，侧滑角，滚转角"}, {"label": "D", "text": "迎角、侧滑角、航迹角"}], "answer": "B"}, {"id": 219, "text": "飞行侧滑角为", "options": [{"label": "A", "text": "飞机纵轴与水平面的夹角"}, {"label": "B", "text": "飞行速度与水平面的夹角"}, {"label": "C", "text": "空速向量与飞机对称面的夹角"}, {"label": "D", "text": "飞机纵轴与翼弦的夹角"}], "answer": "C"}, {"id": 220, "text": "对飞机方向稳定性影响最大的是", "options": [{"label": "A", "text": "飞机的最大迎风面积"}, {"label": "B", "text": "水平尾翼"}, {"label": "C", "text": "垂直尾翼"}, {"label": "D", "text": "机翼的上反角"}], "answer": "C"}, {"id": 221, "text": "我国现有飞行情报区11个，其中包括", "options": [{"label": "A", "text": "沈阳、北京、上海、台北"}, {"label": "B", "text": "北京、天津、上海、广州"}, {"label": "C", "text": "香港、昆明、石家庄、西安"}, {"label": "C", "text": "兰州、三亚、乌鲁木齐、深圳"}, {"label": "D", "text": "(缺失)"}], "answer": "A"}, {"id": 222, "text": "民用空域分为飞行情报区、管制空域、空中禁区、危险区、", "options": [{"label": "A", "text": "空中限制区"}, {"label": "B", "text": "区域管制区"}, {"label": "C", "text": "塔台管制区"}, {"label": "D", "text": "进近管制区"}], "answer": "A"}, {"id": 223, "text": "无人机飞行前，需检查电池状态，", "options": [{"label": "A", "text": "电池电量显示80%"}, {"label": "B", "text": "电池外壳有轻微划痕"}, {"label": "C", "text": "电池鼓包"}, {"label": "D", "text": "电池充满电放置1小时"}], "answer": "C"}, {"id": 224, "text": "我国民用无人机飞行空域划分中，“低空空域”通常指的是相对地面高度", "options": [{"label": "A", "text": "100米"}, {"label": "B", "text": "120米"}, {"label": "C", "text": "200米"}, {"label": "D", "text": "500米"}], "answer": "B"}, {"id": 225, "text": "夜间温度降低，低层常常出现逆温，会使得", "options": [{"label": "A", "text": "早晨天气晴朗"}, {"label": "B", "text": "早晨有雾和烟幕"}, {"label": "C", "text": "早晨有大风"}, {"label": "D", "text": "早晨出现强对流天气"}], "answer": "B"}, {"id": 226, "text": "相对湿度，是指", "options": [{"label": "A", "text": "空气中水汽含量与饱和水汽含量的百分比"}, {"label": "B", "text": "空气中水汽压与饱和水汽压的百分比"}, {"label": "C", "text": "空气中水分占空气总量的百分比"}, {"label": "D", "text": "空气中的露点温度与气温的比值"}], "answer": "B"}, {"id": 227, "text": "露点温度指空气在水汽含量和气压都不改变的条件下，冷却到饱和时的温度。形象地说，就是空气中的水蒸气变为露珠时候的温度叫露点温度。下述正确的是", "options": [{"label": "A", "text": "当空气中水汽已达到饱和时，气温与露点温度相同"}, {"label": "B", "text": "当水汽未达到饱和时，气温一定低于露点温度"}, {"label": "C", "text": "在100%的相对湿度时，周围环境的温度高于露点温度"}, {"label": "D", "text": "露点温度仅与空气的温度有关，与水汽含量无关"}], "answer": "A"}, {"id": 228, "text": "空气中容纳水汽的数量随气温变化，气温越高，则", "options": [{"label": "A", "text": "可以容纳的水汽就越少"}, {"label": "B", "text": "可以容纳的水汽就越多"}, {"label": "C", "text": "当空气不能再容纳更多的水汽时，温度就会变化"}, {"label": "D", "text": "空气容纳水汽的能力与气温成反比"}], "answer": "B"}, {"id": 229, "text": "飞机外表面的冰霜雪等", "options": [{"label": "A", "text": "会引起飞机操纵效能增加"}, {"label": "B", "text": "会出现指令仰角变化和滚转"}, {"label": "C", "text": "会使外表面变的粗糙，增加阻力，减少升力"}, {"label": "D", "text": "对飞机的气动性能无明显影响"}], "answer": "C"}, {"id": 230, "text": "雾通常发生在接近地面的空气温度冷却到空气的露点时，是从地表开始", "options": [{"label": "A", "text": "50英尺内的云"}, {"label": "B", "text": "80英尺内的云"}, {"label": "C", "text": "100英尺内的云"}, {"label": "D", "text": "200 英尺内的云"}], "answer": "A"}, {"id": 231, "text": "使飞机绕立轴作旋转运动的力矩称为", "options": [{"label": "A", "text": "俯仰力矩"}, {"label": "B", "text": "纵向力矩"}, {"label": "C", "text": "偏航力矩"}, {"label": "D", "text": "滚转力矩"}], "answer": "C"}, {"id": 232, "text": "使飞机绕纵轴产生侧倾的力矩称为", "options": [{"label": "A", "text": "俯仰力矩"}, {"label": "B", "text": "偏航力矩"}, {"label": "C", "text": "滚转力矩"}, {"label": "D", "text": "纵向力矩"}], "answer": "C"}, {"id": 233, "text": "增加垂直安定面面积产生的影响将", "options": [{"label": "A", "text": "增加升力"}, {"label": "B", "text": "增加横向稳定性"}, {"label": "C", "text": "增加纵向静稳定性"}, {"label": "D", "text": "增加方向静稳定性"}], "answer": "B"}, {"id": 234, "text": "飞机的重心位置影响飞机的", "options": [{"label": "A", "text": "纵向稳定性"}, {"label": "B", "text": "方向稳定性"}, {"label": "C", "text": "横向稳定性"}, {"label": "D", "text": "气动效率与升力大小"}], "answer": "A"}, {"id": 235, "text": "对于具有静稳定性的飞机，向左侧滑时其机头会", "options": [{"label": "A", "text": "保持不变"}, {"label": "B", "text": "向左转"}, {"label": "C", "text": "向右转"}, {"label": "D", "text": "先左转后右转"}], "answer": "B"}, {"id": 236, "text": "焦点在重心之后，焦点位置向后移", "options": [{"label": "A", "text": "增加纵向稳定性"}, {"label": "B", "text": "提高纵向操纵性"}, {"label": "C", "text": "减小纵向稳定性"}, {"label": "D", "text": "纵向稳定性保持不变"}], "answer": "A"}, {"id": 237, "text": "从机尾向机头方向看去，顺时针旋转螺旋桨飞机的扭距使飞机", "options": [{"label": "A", "text": "向下低头"}, {"label": "B", "text": "向左滚转"}, {"label": "C", "text": "向上抬头"}, {"label": "D", "text": "向右滚转"}], "answer": "B"}, {"id": 238, "text": "仅偏转副翼使飞机水平左转弯时，出现", "options": [{"label": "A", "text": "右侧滑"}, {"label": "B", "text": "左侧滑"}, {"label": "C", "text": "无侧滑"}, {"label": "D", "text": "先左侧滑后右侧滑"}], "answer": "B"}, {"id": 239, "text": "下面关于盘旋错误的是", "options": [{"label": "A", "text": "当飞行速度达到盘旋速度时（通常取200公里/小时），应协调一致地向盘旋方向压杆.蹬舵。"}, {"label": "B", "text": "在盘旋中保持好高度有助于保持盘旋速度，若高度升高，为了保持等高就要向前顶杆，这样就会使速度增大。"}, {"label": "C", "text": "改出盘旋，首先要消除向心力，故应向盘旋方向压杆，减小坡度，使旋翼拉力的水平分力减小。"}, {"label": "D", "text": "盘旋中坡度越大，转弯半径越小，转弯角速度越大"}], "answer": "C"}, {"id": 240, "text": "影响平飞性能的因素，错误的是", "options": [{"label": "A", "text": "在小速度平飞时，高度增加，诱阻功率增大较多，而废阻功率减小较少，因此，平飞所需功率增大。在大速度平飞时，高度增加，诱阻功率增大程度减小，而废阻功率减小程度增大，平飞所需功率有所减小。"}, {"label": "B", "text": "直升机废阻力面积越大，飞行速度越快。"}, {"label": "C", "text": "随飞行重量的增大，平飞速度范围缩小"}, {"label": "D", "text": "空气密度越大，平飞所需功率越小"}], "answer": "B"}];
+const tfData = [{"id": 1, "text": "无人机的升力主要由旋翼产生。", "answer": true}, {"id": 2, "text": "无人机的旋翼转速越高，升力越大。", "answer": true}, {"id": 3, "text": "无人机的飞行稳定性与重心位置无关。", "answer": false}, {"id": 4, "text": "无人机的飞行速度与风速无关。", "answer": false}, {"id": 5, "text": "无人机的旋翼旋转方向相同。", "answer": false}, {"id": 6, "text": "无人机的旋翼旋转方向相反以抵消扭矩。", "answer": true}, {"id": 7, "text": "无人机的飞行高度与气压有关。", "answer": true}, {"id": 8, "text": "无人机的飞行姿态由陀螺仪控制。", "answer": true}, {"id": 9, "text": "无人机的飞行速度由油门控制。", "answer": true}, {"id": 10, "text": "无人机的飞行方向由方向舵控制。", "answer": true}, {"id": 11, "text": "无人机是指通过遥控或自主控制飞行的航空器。", "answer": true}, {"id": 12, "text": "无人机的英文缩写是UAV。", "answer": true}, {"id": 13, "text": "无人机只能用于军事用途。", "answer": false}, {"id": 14, "text": "多旋翼无人机通常有四个旋翼。", "answer": true}, {"id": 15, "text": "无人机的飞行高度不受限制。", "answer": false}, {"id": 16, "text": "无人机的飞行速度通常比有人驾驶飞机快。", "answer": false}, {"id": 17, "text": "无人机的电池寿命通常为1小时以上。", "answer": false}, {"id": 18, "text": "无人机的飞行控制系统可以完全自主飞行。", "answer": true}, {"id": 19, "text": "无人机的GPS系统用于定位和导航。", "answer": true}, {"id": 20, "text": "无人机的遥控器通常使用2.4GHz频率。", "answer": true}, {"id": 21, "text": "无人机飞行前，需确认飞行区域无禁飞标识。", "answer": true}, {"id": 22, "text": "电池鼓包是正常现象，不影响无人机飞行性能。", "answer": false}, {"id": 23, "text": "无人机在雨天飞行，可能导致电路短路，损坏设备。", "answer": true}, {"id": 24, "text": "遥控器“方向杆”可控制无人机的前后、左右飞行方向。", "answer": true}, {"id": 25, "text": "无人机飞行日志仅用于记录，无需长期保存。", "answer": false}, {"id": 26, "text": "重量小于0.25千克的无人机，无需进行实名登记。", "answer": true}, {"id": 27, "text": "飞行中，若发现无人机电量快速下降，应立即寻找安全区域降落。", "answer": true}, {"id": 28, "text": "无人机可以在高压电线附近飞行，只要保持一定距离即可。", "answer": false}, {"id": 29, "text": "新购买的无人机，无需阅读说明书，直接操作即可。", "answer": false}, {"id": 30, "text": "无人机的飞行控制系统包括气压计。", "answer": true}, {"id": 32, "text": "无人机使用后应检查电池状态。", "answer": true}, {"id": 34, "text": "无人机使用后应检查电机是否正常。", "answer": true}, {"id": 36, "text": "无人机使用后应检查GPS模块是否正常。", "answer": true}, {"id": 38, "text": "无人机使用后应检查飞行环境。", "answer": true}, {"id": 41, "text": "无人机降落时，应选择平坦、无障碍物的地面，避免碰撞。", "answer": true}, {"id": 42, "text": "无人机是利用无线电遥控设备和自备的程序控制装置操纵的不载人飞机。", "answer": true}, {"id": 43, "text": "控制站也称遥控站、地面站，它是无人机系统的组成部分，包括用于操纵无人机的设备。", "answer": false}, {"id": 44, "text": "无人机云系统简称无人机云，是指轻小型民用无人机运行动态数据库系统。", "answer": true}, {"id": 45, "text": "运营人是指从事或拟从事航空器运营的个人、组织，从事或拟从事航空器运营的企业不是运营人。", "answer": false}, {"id": 46, "text": "无人机系统的机长是指在系统运行时间内，负责整个无人机系统运行和安全的驾驶员。", "answer": true}, {"id": 47, "text": "融合空域是指有其他航空器同时运行的空域。", "answer": true}, {"id": 48, "text": "机场净空区是指为保护航空器起飞、飞行和降落安全，根据民用机场净空障碍物限制图要求划定的空间范围。", "answer": true}, {"id": 49, "text": "扑翼无人机是指像鸟一样通过机翼主动运动产生升力和前进力的飞行器，故又称振翼机。", "answer": true}, {"id": 500, "text": "警用无人机是警用无人驾驶飞机的简称，属于民用无人机。", "answer": false}, {"id": 51, "text": "无人机飞行前，只需检查无人机本身，无需关注周边环境。", "answer": false}, {"id": 52, "text": "民用无人机可以在民航客机航线下方飞行。", "answer": false}, {"id": 53, "text": "无人机电池长时间不用时，应充满电存放，避免电量流失。", "answer": false}, {"id": 54, "text": "遇到突发情况，无人机驾驶员应优先保证自身安全，再考虑无人机状态。", "answer": true}, {"id": 55, "text": "无人机在夜间飞行时，需开启夜间航行灯，确保被其他飞行器识别。", "answer": true}, {"id": 56, "text": "遥控器电量不足时，仍可尝试短距离飞行。", "answer": false}, {"id": 57, "text": "无人机螺旋桨安装反了，会导致无法起飞或飞行不稳定。", "answer": true}, {"id": 58, "text": "只要无人机电量充足，就可以在任何高度飞行。", "answer": false}, {"id": 59, "text": "飞行过程中，若无人机出现异常震动，应立即降落检查。", "answer": true}, {"id": 60, "text": "民用无人机无需考取执照，任何人都可操作飞行。", "answer": false}];
+
+let currentMode = '';
+let currentType = 'all';
+let quizQuestions = [];
+let quizIndex = 0;
+let userAnswers = {};
+let wrongIds = [];
+let answeredCount = 0;
+let currentScore = 0;
+
+function goHome() {
+  currentMode = '';
+  currentType = 'all';
+  quizQuestions = [];
+  quizIndex = 0;
+  userAnswers = {};
+  wrongIds = [];
+  answeredCount = 0;
+  currentScore = 0;
+  document.getElementById('backBtn').classList.add('hidden');
+  showHome();
+}
+
+function showHome() {
+  const c = document.getElementById('mainContainer');
+  c.innerHTML = `
+    <div class="home">
+      <h2>选择练习模式</h2>
+      <div class="stats">选择题共 221 道 · 判断题共 54 道</div>
+      
+      <div class="type-selector">
+        <button class="type-btn active" onclick="selectType('all')">全部题型</button>
+        <button class="type-btn" onclick="selectType('choice')">选择题</button>
+        <button class="type-btn" onclick="selectType('tf')">判断题</button>
+      </div>
+      
+      <div class="mode-cards">
+        <div class="mode-card" onclick="startQuiz('sequential')">
+          <div class="icon">📖</div>
+          <h3>按序刷题</h3>
+          <p>按题目顺序依次作答</p>
+          <div class="count">适合系统复习</div>
+        </div>
+        <div class="mode-card" onclick="showRandomOptions()">
+          <div class="icon">🎲</div>
+          <h3>随机刷题</h3>
+          <p>随机抽取题目练习</p>
+          <div class="count">支持分段练习</div>
+        </div>
+      </div>
+      
+      <div id="randomOptions" class="hidden">
+        <div style="color:#94a3b8;font-size:14px;margin-bottom:12px;">选择题量：</div>
+        <div class="count-selector">
+          <button class="count-btn" onclick="startQuiz('random', 10)">10题</button>
+          <button class="count-btn" onclick="startQuiz('random', 20)">20题</button>
+          <button class="count-btn" onclick="startQuiz('random', 30)">30题</button>
+          <button class="count-btn" onclick="startQuiz('random', 50)">50题</button>
+          <button class="count-btn" onclick="startQuiz('random', 100)">100题</button>
+          <button class="count-btn" onclick="startQuiz('random', 'all')">全部</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function selectType(type) {
+  currentType = type;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function showRandomOptions() {
+  document.getElementById('randomOptions').classList.toggle('hidden');
+}
+
+function startQuiz(mode, count) {
+  currentMode = mode;
+  let pool = [];
+  if (currentType === 'choice' || currentType === 'all') {
+    choiceData.forEach(q => pool.push({...q, type: 'choice'}));
+  }
+  if (currentType === 'tf' || currentType === 'all') {
+    tfData.forEach(q => pool.push({...q, type: 'tf'}));
+  }
+  
+  if (mode === 'random') {
+    if (count === 'all' || count >= pool.length) {
+      quizQuestions = pool;
+    } else {
+      quizQuestions = pool.sort(() => Math.random() - 0.5).slice(0, count);
+    }
+  } else {
+    quizQuestions = pool;
+  }
+  
+  // Re-sort random by question id for sequential, or keep random order
+  if (mode === 'sequential') {
+    quizQuestions.sort((a, b) => a.id - b.id || (a.type === 'choice' ? 0 : 1));
+  }
+  
+  quizIndex = 0;
+  userAnswers = {};
+  wrongIds = [];
+  answeredCount = 0;
+  currentScore = 0;
+  
+  document.getElementById('backBtn').classList.remove('hidden');
+  showQuiz();
+}
+
+function showQuiz() {
+  if (quizIndex >= quizQuestions.length) {
+    showResult();
+    return;
+  }
+  
+  const q = quizQuestions[quizIndex];
+  const c = document.getElementById('mainContainer');
+  const progress = Math.round((quizIndex / quizQuestions.length) * 100);
+  
+  let optionsHtml = '';
+  if (q.type === 'choice') {
+    optionsHtml = '<div class="options">';
+    q.options.forEach(opt => {
+      optionsHtml += '<button class="option" onclick="selectChoice(\'' + opt.label + '\')"><span class="label">' + opt.label + '</span>' + opt.text + '</button>';
+    });
+    optionsHtml += '</div>';
+  } else {
+    optionsHtml = '<div class="tf-options"><button class="tf-btn" onclick="selectTF(true)">✓ 正确</button><button class="tf-btn" onclick="selectTF(false)">✗ 错误</button></div>';
+  }
+  
+  c.innerHTML = `
+    <div class="score-bar">
+      <div class="info">进度：<strong>${quizIndex + 1}</strong> / ${quizQuestions.length}</div>
+      <div class="info">得分：<strong>${currentScore}</strong></div>
+    </div>
+    <div class="q-card" id="qCard">
+      <div class="q-header">
+        <span class="q-num">第 ${quizIndex + 1} 题</span>
+        <span class="q-type">${q.type === 'choice' ? '选择题' : '判断题'}</span>
+      </div>
+      <div class="q-text">${q.text}</div>
+      ${optionsHtml}
+      <div class="feedback hidden" id="feedback"></div>
+    </div>
+  `;
+  
+  // Update progress in header
+  document.getElementById('headerSub').textContent = `进度 ${progress}%`;
+}
+
+function selectChoice(label) {
+  const q = quizQuestions[quizIndex];
+  const card = document.getElementById('qCard');
+  
+  if (userAnswers[q.id] !== undefined) return; // already answered
+  
+  userAnswers[q.id] = label;
+  answeredCount++;
+  
+  const isCorrect = label === q.answer;
+  const fb = document.getElementById('feedback');
+  fb.classList.remove('hidden');
+  
+  if (isCorrect) {
+    currentScore += 1;
+    fb.className = 'feedback correct';
+    fb.textContent = '✓ 回答正确！';
+    card.querySelectorAll('.option').forEach(b => {
+      if (b.querySelector('.label').textContent === label) b.classList.add('correct');
+    });
+  } else {
+    fb.className = 'feedback wrong';
+    fb.textContent = '✗ 回答错误，正确答案是 ' + q.answer;
+    card.querySelectorAll('.option').forEach(b => {
+      const lbl = b.querySelector('.label').textContent;
+      if (lbl === label) b.classList.add('wrong');
+      if (lbl === q.answer) b.classList.add('correct');
+    });
+    wrongIds.push(q.id);
+  }
+  
+  setTimeout(() => {
+    quizIndex++;
+    showQuiz();
+  }, 2000);
+}
+
+function selectTF(ans) {
+  const q = quizQuestions[quizIndex];
+  const card = document.getElementById('qCard');
+  
+  if (userAnswers[q.id] !== undefined) return;
+  
+  userAnswers[q.id] = ans;
+  answeredCount++;
+  
+  const isCorrect = ans === q.answer;
+  const fb = document.getElementById('feedback');
+  fb.classList.remove('hidden');
+  
+  const correctBtn = card.querySelectorAll('.tf-btn');
+  correctBtn.forEach(b => {
+    if ((ans && b.textContent.includes('✓')) || (!ans && b.textContent.includes('✗'))) {
+      b.classList.add('selected');
+    }
+    if ((q.answer && b.textContent.includes('✓')) || (!q.answer && b.textContent.includes('✗'))) {
+      b.classList.add('correct');
+    }
+  });
+  
+  if (isCorrect) {
+    currentScore += 1;
+    fb.className = 'feedback correct';
+    fb.textContent = '✓ 回答正确！';
+  } else {
+    fb.className = 'feedback wrong';
+    fb.textContent = '✗ 回答错误，正确答案是 ' + (q.answer ? '✓ 正确' : '✗ 错误');
+    wrongIds.push(q.id);
+  }
+  
+  setTimeout(() => {
+    quizIndex++;
+    showQuiz();
+  }, 2000);
+}
+
+function showResult() {
+  const total = quizQuestions.length;
+  const correct = currentScore;
+  const wrong = total - correct;
+  const rate = Math.round((correct / total) * 100);
+  
+  let wrongHtml = '';
+  if (wrongIds.length > 0) {
+    wrongHtml = '<div class="wrong-list"><h3 style="color:#fca5a5;margin-bottom:10px;font-size:15px;">错题回顾</h3>';
+    wrongIds.forEach(id => {
+      const q = quizQuestions.find(x => x.id === id);
+      if (q) {
+        const yourAns = userAnswers[id];
+        const correctAns = q.answer;
+        const yourAnsText = q.type === 'choice' ? yourAns : (yourAns ? '✓ 正确' : '✗ 错误');
+        const correctAnsText = q.type === 'choice' ? correctAns : (correctAns ? '✓ 正确' : '✗ 错误');
+        wrongHtml += '<div class="wrong-item">';
+        wrongHtml += '<div class="q-text"><strong>第' + q.id + '题：</strong>' + q.text + '</div>';
+        wrongHtml += '<div class="your-ans">你的答案：' + yourAnsText + '</div>';
+        wrongHtml += '<div class="correct-ans">正确答案：' + correctAnsText + '</div>';
+        if (q.type === 'choice') {
+          wrongHtml += '<div style="font-size:13px;color:#94a3b8;margin-top:6px;">';
+          q.options.forEach(o => {
+            const isCorrect = o.label === correctAns;
+            const isYourAns = o.label === yourAns;
+            wrongHtml += '<span style="margin-right:10px;">' + o.label + '. ' + o.text + (isCorrect ? ' ✓' : '') + '</span>';
+          });
+          wrongHtml += '</div>';
+        }
+        wrongHtml += '</div>';
+      }
+    });
+    wrongHtml += '</div>';
+  }
+  
+  const c = document.getElementById('mainContainer');
+  c.innerHTML = `
+    <div class="result-card">
+      <div style="color:#94a3b8;font-size:14px;">本次练习完成</div>
+      <div class="big-score">${rate}%</div>
+      <div class="score-info">答对 ${correct} / ${total} 题</div>
+      <div class="score-info">正确：${correct} 题 · 错误：${wrong} 题</div>
+      
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="retryWrong()" ${wrongIds.length === 0 ? 'style="display:none"' : ''}>错题重答 (${wrongIds.length}题)</button>
+        <button class="btn btn-secondary" onclick="location.reload()">返回首页</button>
+      </div>
+      
+      ${wrongHtml}
+    </div>
+  `;
+  
+  document.getElementById('backBtn').classList.add('hidden');
+  document.getElementById('headerSub').textContent = '练习完成';
+}
+
+function retryWrong() {
+  if (wrongIds.length === 0) return;
+  
+  quizQuestions = quizQuestions.filter(q => wrongIds.includes(q.id));
+  quizIndex = 0;
+  userAnswers = {};
+  wrongIds = [];
+  answeredCount = 0;
+  currentScore = 0;
+  currentMode = 'wrong';
+  
+  showQuiz();
+}
+
+// Initialize
+showHome();
+</script>
+</body>
+</html>
